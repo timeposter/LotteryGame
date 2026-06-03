@@ -1,0 +1,140 @@
+﻿@page "/ChatAdmin"
+@model LotteryAdminSystem.Pages.Admin.ChatAdminModel
+@{
+    Layout = "_Layout";
+}
+<style>
+    .wrap {
+        display: flex;
+        gap: 10px;
+        margin: 20px
+    }
+
+    .user-list {
+        width: 220px;
+        border: 1px solid #ccc;
+        padding: 10px
+    }
+
+    .chat-box {
+        flex: 1;
+        border: 1px solid #ccc
+    }
+
+    .chat-content {
+        height: 400px;
+        padding: 10px;
+        overflow: auto
+    }
+
+    .send-area {
+        display: flex;
+        padding: 10px
+    }
+
+        .send-area input {
+            flex: 1;
+            padding: 6px
+        }
+
+        .send-area button {
+            padding: 6px 12px;
+            background: #09c;
+            color: #fff;
+            border: none
+        }
+
+    .user-item {
+        padding: 5px;
+        border: 1px solid #eee;
+        margin: 4px;
+        cursor: pointer
+    }
+
+    .active-user {
+        background: #e8f4ff
+    }
+</style>
+
+<div class="wrap">
+    <div class="user-list">
+        <h4>在线访客列表</h4>
+        <div id="userBox"></div>
+    </div>
+    <div class="chat-box">
+        <div class="chat-content" id="adminMsg"></div>
+        <div class="send-area">
+            <input type="hidden" id="selUserConn">
+            <input type="text" id="adminInput" placeholder="选中左侧用户后回复">
+            <button id="adminSend">回复</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.32/signalr.min.js"></script>
+<script>
+    let conn;
+    let userMap = {};
+    let selectConn = "";
+    // 改成 LotteryPlay 前台实际访问地址
+    const hubUrl = "https://localhost:xxxx/chathub";
+
+    $(function(){
+        // 跨域必填 withCredentials:true
+        conn = new signalR.HubConnectionBuilder()
+            .withUrl(hubUrl, { withCredentials: true })
+            .build();
+
+        conn.on("ReceiveMsg",(connId,name,msg)=>{
+            let dom = userMap[connId];
+            if(!dom){
+                dom = $(`<div class="user-item" data-conn="${connId}">${connId}</div>`);
+                $("#userBox").append(dom);
+                userMap[connId]=dom;
+                dom.click(function(){
+                    $(".user-item").removeClass("active-user");
+                    $(this).addClass("active-user");
+                    selectConn = connId;
+                    $("#selUserConn").val(selectConn);
+                })
+            }
+            $("#adminMsg").append(`<div>【访客】${msg}</div>`);
+            $("#adminMsg").scrollTop($("#adminMsg")[0].scrollHeight);
+        })
+
+        conn.on("UserOnline",connId=>{
+            if(!userMap[connId]){
+                let dom = $(`<div class="user-item" data-conn="${connId}">${connId}</div>`);
+                $("#userBox").append(dom);
+                userMap[connId]=dom;
+                dom.click(function(){
+                    $(".user-item").removeClass("active-user");
+                    $(this).addClass("active-user");
+                    selectConn = connId;
+                    $("#selUserConn").val(selectConn);
+                })
+            }
+        })
+
+        // 捕获连接错误方便排查
+        conn.start()
+        .then(()=>{
+            conn.invoke("JoinAdmin");
+            console.log("SignalR连接成功");
+        })
+        .catch(err=>{
+            console.error("连接失败：",err);
+        })
+
+        $("#adminSend").click(function(){
+            if(!selectConn){alert("请先选择左侧访客");return;}
+            let txt = $("#adminInput").val().trim();
+            if(!txt)return;
+            conn.invoke("ReplyUser",selectConn,txt);
+            $("#adminMsg").append(`<div style="text-align:right">【客服】${txt}</div>`);
+            $("#adminMsg").scrollTop($("#adminMsg")[0].scrollHeight);
+            $("#adminInput").val("");
+        })
+    })
+</script>

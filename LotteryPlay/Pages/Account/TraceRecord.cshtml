@@ -1,0 +1,108 @@
+﻿@page
+@model LotteryPlay.Pages.Account.TraceRecordModel
+@{
+    ViewData["Title"] = "追号记录";
+    Layout = "_Layout";
+}
+<style>
+    .wrap {
+        width: 92%;
+        margin: 20px auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    th, td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: center;
+    }
+
+    th {
+        background: #fef0f0;
+        color: #c02020;
+    }
+
+    .status0 {
+        color: green
+    }
+
+    .status1 {
+        color: red
+    }
+
+    .stop-btn {
+        background: #f33;
+        color: #fff;
+        border: 0;
+        padding: 4px 8px;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+</style>
+<div class="wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>序号</th>
+                <th>起始期号</th>
+                <th>总追号期数</th>
+                <th>剩余期数</th>
+                <th>投注号码</th>
+                <th>倍数</th>
+                <th>单期金额</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.List)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.StartPeriod</td>
+                    <td>@item.TotalCount</td>
+                    <td>@item.LeftCount</td>
+                    <td>@item.BetNumber</td>
+                    <td>@item.Multiple</td>
+                    <td>@item.PerMoney</td>
+                    <td class="@(item.Status == 0 ? "status0" : "status1")">
+                        @(item.Status == 0 ? "正常进行中" : "已终止")
+                    </td>
+                    <td>
+                        @if (item.Status == 0 && item.LeftCount > 0)
+                        {
+                            <button class="stop-btn" data-tid="@item.Id">终止追号</button>
+                        }
+                        else
+                        {
+                            <span>-</span>
+                        }
+                    </td>
+                </tr>
+            }
+            @if (!Model.List.Any())
+            {
+                <tr><td colspan="9">暂无追号记录</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script>
+        $(".stop-btn").click(function () {
+            var tid = $(this).data("tid");
+            if (!confirm("确定终止该条追号？剩余期资金原路退回余额")) return;
+            $.post("/Account/TraceRecord?handler=StopTrace", { traceId: tid }, function (res) {
+                alert(res.msg);
+                location.reload();
+            }, "json");
+        })
+    </script>
+}

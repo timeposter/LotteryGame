@@ -1,0 +1,49 @@
+﻿@page "{id:int}"
+@model Pages.User.EditModel
+@{
+    ViewData["Title"] = "编辑用户";
+}
+
+<div class="container mt-4">
+    <h4>编辑用户信息</h4>
+    <hr />
+    <form method="post">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label>用户名</label>
+                <input asp-for="Input.Username" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label>真实姓名</label>
+                <input asp-for="Input.RealName" class="form-control" />
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label>提款方式</label>
+                <input asp-for="Input.WithdrawMethod" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label>提款账号</label>
+                <input asp-for="Input.WithdrawAccount" class="form-control" />
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label>省份</label>
+                <input asp-for="Input.Province" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label>城市</label>
+                <input asp-for="Input.City" class="form-control" />
+            </div>
+        </div>
+        <div class="mb-3">
+            <label>QQ</label>
+            <input asp-for="Input.QQ" class="form-control" />
+        </div>
+
+        <button class="btn btn-primary">保存修改</button>
+        <a asp-page="Index" class="btn btn-secondary">返回列表</a>
+    </form>
+</div>

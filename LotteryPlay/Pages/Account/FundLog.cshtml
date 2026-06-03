@@ -1,0 +1,138 @@
+﻿@page
+@model LotteryPlay.Pages.Account.FundLogModel
+@{
+    ViewData["Title"] = "资金明细";
+}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: "Microsoft Yahei",Arial,sans-serif;
+        background: #fff;
+        color: #333;
+    }
+
+    .top-bar {
+        background: #fff;
+        border-bottom: 1px solid #eee;
+        padding: 8px 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+    }
+
+    .red {
+        color: red;
+        font-weight: bold;
+    }
+
+    .account-subnav {
+        background: #fef0f0;
+        border-bottom: 1px solid #f8c0c0;
+        padding: 6px 15px;
+        font-size: 12px;
+    }
+
+        .account-subnav a {
+            color: #c02020;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+
+    .container {
+        width: 90%;
+        margin: 20px auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #eee;
+    }
+
+    th, td {
+        border: 1px solid #eee;
+        padding: 8px;
+        text-align: center;
+        font-size: 13px;
+    }
+
+    th {
+        background: #f5f5f5;
+    }
+
+    .add {
+        color: green;
+    }
+
+    .sub {
+        color: red;
+    }
+</style>
+
+<div class="top-bar">
+    <div>欢迎您：<span class="red">@HttpContext.Session.GetString("Username")</span> | 余额：<span class="red">@Model.Balance.ToString("f2")</span> 元</div>
+    <div><a href="/Account/Logout">退出账号</a></div>
+</div>
+
+<div class="account-subnav">
+    <a href="/Account/Info">个人资料</a>
+    <a href="/Account/Pwd">修改密码</a>
+    <a href="/Account/FundLog" style="font-weight:bold;">资金明细</a>
+    <a href="/Account/Recharge">我要充值</a>
+    <a href="/Account/Withdraw">我要提款</a>
+    <a href="/">返回投注大厅</a>
+</div>
+
+<div class="container">
+    <h3 style="margin:15px 0;">账户资金流水明细</h3>
+    <table>
+        <tr>
+            <th>流水时间</th>
+            <th>类型</th>
+            <th>变动金额</th>
+            <th>变动前余额</th>
+            <th>变动后余额</th>
+            <th>备注</th>
+        </tr>
+        @foreach (var item in Model.LogList)
+        {
+            <tr>
+                <td>@item.CreateTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                <td>
+                    @switch (item.Type)
+                    {
+                        case 1:
+                            <span class="add">充值</span>
+                            ; break;
+                        case 2:
+
+                            <span class="sub">提款</span>
+                            ; break;
+                        case 3:
+
+                            <span class="sub">投注</span>
+                            ; break;
+                        default:
+
+                            <span>其他</span>
+                            ; break;
+                    }
+                </td>
+                <td class="@(item.Type == 1 ? "add" : "sub")">@item.Money.ToString("f2")</td>
+                <td>@item.BeforeBalance.ToString("f2")</td>
+                <td>@item.AfterBalance.ToString("f2")</td>
+                <td>@item.Remark</td>
+            </tr>
+        }
+        @if (!Model.LogList.Any())
+        {
+            <tr><td colspan="6">暂无资金记录</td></tr>
+        }
+    </table>
+</div>

@@ -1,0 +1,61 @@
+﻿@{
+    string userName = Context.Session.GetString("Username") ?? "";
+}
+<style>
+    /* 公用账户导航样式 全站共用 */
+    .top-bar {
+        background: #fff;
+        border-bottom: 1px solid #eee;
+        padding: 8px 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+    }
+
+    .red {
+        color: red;
+        font-weight: bold;
+    }
+
+    .account-subnav {
+        background: #fef0f0;
+        border-bottom: 1px solid #f8c0c0;
+        padding: 6px 15px;
+        font-size: 12px;
+    }
+
+        .account-subnav a {
+            color: #c02020;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+
+    body {
+        font-family: "Microsoft Yahei",Arial,sans-serif;
+        background: #fff;
+        color: #333;
+        margin: 0;
+        padding: 0;
+    }
+</style>
+
+<!-- 公用头部导航（所有账户页面自动带出） -->
+<div class="top-bar">
+    <div>欢迎您：<span class="red">@userName</span></div>
+    <div><a asp-page="/Account/Logout">退出账号</a></div>
+</div>
+<div class="account-subnav">
+    <a asp-page="/Account/Info">个人资料</a>
+    <a asp-page="/Account/ModifyPwd">修改密码</a>
+    <a asp-page="/Account/FundLog">资金明细</a>
+
+    <a asp-page="/Account/TraceRecord">追号记录</a>
+    <a asp-page="/Account/Recharge">我要充值</a>
+    <a asp-page="/Account/Withdraw">我要提款</a>
+
+    <a asp-page="/">返回投注大厅</a>
+</div>
+
+@RenderBody()
+@RenderSection("Scripts", required: false)

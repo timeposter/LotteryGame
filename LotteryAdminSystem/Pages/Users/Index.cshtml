@@ -1,0 +1,48 @@
+﻿@page
+@model Pages.User.IndexModel
+@{
+    ViewData["Title"] = "用户管理";
+    var adminName = Context.Session.GetString("AdminName");
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>前台用户列表</h4>
+        <div>
+            <span class="me-2">欢迎：@adminName</span>
+            <a href="/Admin/Logout" class="btn btn-sm btn-danger">退出登录</a>
+        </div>
+    </div>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>用户名</th>
+                <th>真实姓名</th>
+                <th>提款账号</th>
+                <th>QQ</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.UserList)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.Username</td>
+                    <td>@item.RealName</td>
+                    <td>@item.RealName</td>
+                    <td>@item.WithdrawAccount</td>
+                    <td>
+                        <a asp-page="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">编辑</a>
+                        <form method="post" style="display:inline">
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <button type="submit" asp-page-handler="Delete" class="btn btn-sm btn-danger" onclick="return confirm('确定删除？')">删除</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

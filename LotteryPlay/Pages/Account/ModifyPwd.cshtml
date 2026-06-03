@@ -1,0 +1,124 @@
+﻿@page
+@model LotteryPlay.Pages.Account.ModifyPwdModel
+@{
+    ViewData["Title"] = "修改密码";
+    Layout = "_Layout"; //绑定公用布局，自动带出顶部导航
+}
+
+<style>
+    /* 本页独有样式，公共样式已移至Layout */
+    .container {
+        width: 500px;
+        margin: 30px auto;
+        border: 1px solid #eee;
+        padding: 20px;
+    }
+
+    .box {
+        border: 1px dashed #ccc;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .title {
+        font-size: 15px;
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: #c02020;
+    }
+
+    .item {
+        margin: 12px 0;
+        font-size: 14px;
+    }
+
+        .item label {
+            display: inline-block;
+            width: 110px;
+            text-align: right;
+            margin-right: 10px;
+        }
+
+        .item input {
+            padding: 6px;
+            width: 220px;
+            border: 1px solid #ccc;
+        }
+
+    .btn {
+        padding: 6px 20px;
+        background: #c02020;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .msg {
+        text-align: center;
+        margin: 8px 0;
+        font-size: 14px;
+    }
+
+    .msg-login {
+        color: @Model.LoginMsgColor;
+    }
+
+    .msg-withdraw {
+        color: @Model.WithdrawMsgColor;
+    }
+</style>
+
+<div class="container">
+    <!-- 修改登录密码 -->
+    <div class="box">
+        <div class="title">修改登录密码</div>
+        @if (!string.IsNullOrEmpty(Model.LoginMsg))
+        {
+            <div class="msg msg-login">@Model.LoginMsg</div>
+        }
+        <form method="post" asp-page-handler="LoginPwd">
+            <div class="item">
+                <label>原登录密码：</label>
+                <input type="password" asp-for="LoginOldPwd" />
+            </div>
+            <div class="item">
+                <label>新登录密码：</label>
+                <input type="password" asp-for="LoginNewPwd" />
+            </div>
+            <div class="item">
+                <label>确认新密码：</label>
+                <input type="password" asp-for="LoginRePwd" />
+            </div>
+            <div class="item" style="text-align:center;margin-top:10px;">
+                <button type="submit" class="btn">提交修改登录密码</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 修改提款密码 -->
+    <div class="box">
+        <div class="title">修改提款密码</div>
+        @if (!string.IsNullOrEmpty(Model.WithdrawMsg))
+        {
+            <div class="msg msg-withdraw">@Model.WithdrawMsg</div>
+        }
+        <form method="post" asp-page-handler="WithdrawPwd">
+            <div class="item">
+                <label>原提款密码：</label>
+                <input type="password" asp-for="WithdrawOldPwd" />
+            </div>
+            <div class="item">
+                <label>新提款密码：</label>
+                <input type="password" asp-for="WithdrawNewPwd" />
+            </div>
+            <div class="item">
+                <label>确认新密码：</label>
+                <input type="password" asp-for="WithdrawRePwd" />
+            </div>
+            <div class="item" style="text-align:center;margin-top:10px;">
+                <button type="submit" class="btn">提交修改提款密码</button>
+            </div>
+        </form>
+    </div>
+</div>

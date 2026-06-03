@@ -1,0 +1,117 @@
+﻿@page
+@model LotteryPlay.Pages.Account.RechargeModel
+@{
+    ViewData["Title"] = "我要充值";
+}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: "Microsoft Yahei",Arial,sans-serif;
+        background: #fff;
+        color: #333;
+    }
+
+    .top-bar {
+        background: #fff;
+        border-bottom: 1px solid #eee;
+        padding: 8px 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+    }
+
+    .red {
+        color: red;
+        font-weight: bold;
+    }
+
+    .account-subnav {
+        background: #fef0f0;
+        border-bottom: 1px solid #f8c0c0;
+        padding: 6px 15px;
+        font-size: 12px;
+    }
+
+        .account-subnav a {
+            color: #c02020;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+
+    .container {
+        width: 450px;
+        margin: 30px auto;
+        border: 1px solid #eee;
+        padding: 20px;
+    }
+
+    .item {
+        margin: 15px 0;
+        font-size: 14px;
+    }
+
+        .item label {
+            display: inline-block;
+            width: 100px;
+            text-align: right;
+            margin-right: 10px;
+        }
+
+        .item input {
+            padding: 6px;
+            width: 220px;
+            border: 1px solid #ccc;
+        }
+
+    .btn {
+        padding: 6px 20px;
+        background: #c02020;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .msg {
+        text-align: center;
+        margin: 10px 0;
+        color: @Model.MsgColor;
+    }
+</style>
+
+<div class="top-bar">
+    <div>欢迎您：<span class="red">@HttpContext.Session.GetString("Username")</span> | 当前余额：<span class="red">@Model.Balance.ToString("f2")</span> 元</div>
+    <div><a href="/Account/Logout">退出账号</a></div>
+</div>
+
+<div class="account-subnav">
+    <a href="/Account/Info">个人资料</a>
+    <a href="/Account/Pwd">修改密码</a>
+    <a href="/Account/FundLog">资金明细</a>
+    <a href="/Account/Recharge" style="font-weight:bold;">我要充值</a>
+    <a href="/Account/Withdraw">我要提款</a>
+    <a href="/">返回投注大厅</a>
+</div>
+
+<div class="container">
+    <h3 style="text-align:center;margin-bottom:20px;">账户充值</h3>
+    @if (!string.IsNullOrEmpty(Model.Msg))
+    {
+        <div class="msg">@Model.Msg</div>
+    }
+    <form method="post">
+        <div class="item">
+            <label>充值金额：</label>
+            <input type="number" min="1" step="0.01" asp-for="Money" placeholder="请输入充值金额" />
+        </div>
+        <div class="item" style="text-align:center;margin-top:25px;">
+            <button type="submit" class="btn">立即充值</button>
+        </div>
+    </form>
+</div>

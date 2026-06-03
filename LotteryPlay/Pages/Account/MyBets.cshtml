@@ -1,0 +1,77 @@
+﻿@page
+@model LotteryPlay.Pages.Account.MyBetsModel
+@{
+    ViewData["Title"] = "我的投注";
+}
+<style>
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        border: 1px solid #eee;
+        padding: 8px;
+        text-align: center;
+    }
+
+    .win {
+        color: green;
+    }
+
+    .lose {
+        color: red;
+    }
+</style>
+
+<div class="account-subnav">
+    <a href="/Account/Info">个人资料</a>
+    <a href="/Account/ModifyPwd">修改密码</a>
+    <a href="/Account/FundLog">资金明细</a>
+    <a href="/Account/MyBets" style="font-weight:bold;">我的投注</a>
+    <a href="/Account/Recharge">我要充值</a>
+    <a href="/Account/Withdraw">我要提款</a>
+    <a href="/">返回投注大厅</a>
+</div>
+
+<div style="padding:15px;">
+    <h3>我的投注记录</h3>
+    <table>
+        <tr>
+            <th>期号</th>
+            <th>玩法</th>
+            <th>投注号码</th>
+            <th>倍数</th>
+            <th>投注金额</th>
+            <th>开奖号码</th>
+            <th>状态</th>
+            <th>中奖金额</th>
+        </tr>
+        @foreach (var bet in Model.Bets)
+        {
+            <tr>
+                <td>@bet.Period</td>
+                <td>@bet.Play.PlayName</td>
+                <td>@bet.BetNumber</td>
+                <td>@bet.Multiple</td>
+                <td>@bet.BetMoney</td>
+                <td>@(bet.IsSettled ? (Model.OpenNumbers.ContainsKey(bet.Period) ? Model.OpenNumbers[bet.Period] : "-") : "-")</td>
+                <td class="@(bet.IsSettled ? (bet.IsWin ? "win" : "lose") : "")">
+                    @if (!bet.IsSettled)
+                    {
+                        <span>待开奖</span>
+                    }
+                    else if (bet.IsWin)
+                    {
+                        <span>已中奖</span>
+                    }
+                    else
+                    {
+                        <span>未中奖</span>
+                    }
+                </td>
+                <td>@bet.WinMoney.ToString("f2")</td>
+            </tr>
+        }
+    </table>
+</div>

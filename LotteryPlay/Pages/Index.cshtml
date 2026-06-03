@@ -1,0 +1,340 @@
+﻿@page
+@model LotteryPlay.Pages.IndexModel
+@{
+    Layout = "_Layout";
+}
+<script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.32/signalr.min.js"></script>
+<style>
+    /* 全局主容器左右布局 */
+    .main-container {
+        display: flex;
+        gap: 16px;
+        max-width: 1400px;
+        margin: 15px auto;
+        padding: 0 10px;
+    }
+
+    .left-box {
+        width: 65%;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .right-box {
+        width: 35%;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    /* 左侧上区块：LOGO+当期+最新开奖 */
+    .left-top {
+        border: 1px solid #eee;
+        padding: 15px;
+        border-radius: 6px;
+    }
+
+    .logo-row {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 12px;
+    }
+
+    .lot-logo {
+        width: 70px;
+        height: 70px;
+        background: #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .period-info {
+        flex: 1;
+    }
+
+    .open-result-item {
+        margin-top: 10px;
+        padding: 10px;
+        background: #f8f8f8;
+    }
+    /* 左侧下区块：玩法+投注追号 */
+    .left-bottom {
+        border: 1px solid #eee;
+        padding: 15px;
+        border-radius: 6px;
+    }
+
+    .play-type-group button {
+        padding: 6px 10px;
+        margin: 3px;
+        border: 1px solid #ccc;
+        background: #fff;
+    }
+
+        .play-type-group button.active {
+            background: #09c;
+            color: #fff;
+            border-color: #09c;
+        }
+
+    .num-wrap {
+        margin: 12px 0;
+    }
+
+    .num-row {
+        margin: 8px 0;
+    }
+
+    .pos-label {
+        display: inline-block;
+        width: 70px;
+    }
+
+    .num-item {
+        display: inline-block;
+        width: 32px;
+        height: 32px;
+        line-height: 32px;
+        text-align: center;
+        border: 1px solid #ccc;
+        margin: 2px;
+        cursor: pointer;
+    }
+
+        .num-item.selected {
+            background: #09c;
+            color: #fff;
+            border-color: #09c;
+        }
+
+    .pos-btn {
+        padding: 3px 6px;
+        margin: 2px;
+    }
+
+    .stat-area {
+        margin: 12px 0;
+    }
+
+    .submit-btn {
+        padding: 6px 12px;
+        border: none;
+        cursor: pointer;
+        margin: 0 4px;
+    }
+
+    #btnBet {
+        background: #069;
+        color: #fff;
+    }
+
+    #btnTrace {
+        background: #09c;
+        color: #fff;
+    }
+
+    #traceBox {
+        margin-top: 10px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        display: none;
+    }
+
+    #traceInputBox {
+        display: none
+    }
+
+    /* 右侧通用卡片 */
+    .right-card {
+        border: 1px solid #eee;
+        padding: 15px;
+        border-radius: 6px;
+    }
+
+        .right-card h4 {
+            margin-top: 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 6px;
+        }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    th, td {
+        border: 1px solid #ddd;
+        padding: 6px;
+        text-align: center;
+    }
+
+    /* 客服悬浮样式不变 */
+    .kf-float {
+        position: fixed;
+        right: 20px;
+        bottom: 80px;
+        width: 50px;
+        height: 50px;
+        background: #09c;
+        color: #fff;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 50px;
+        cursor: pointer;
+        z-index: 999;
+    }
+
+    .kf-box {
+        position: fixed;
+        right: 20px;
+        bottom: 140px;
+        width: 340px;
+        height: 420px;
+        border: 1px solid #ccc;
+        background: #fff;
+        display: none;
+        z-index: 999;
+    }
+
+    .kf-title {
+        background: #09c;
+        color: #fff;
+        padding: 8px;
+        text-align: center;
+    }
+
+    .kf-content {
+        height: 320px;
+        overflow-y: auto;
+        padding: 8px;
+    }
+
+    .kf-input {
+        display: flex;
+        padding: 8px
+    }
+
+        .kf-input input {
+            flex: 1;
+            padding: 6px
+        }
+
+        .kf-input button {
+            background: #09c;
+            border: none;
+            color: #fff;
+            padding: 6px 10px
+        }
+
+    .msg-left {
+        text-align: left;
+        margin: 4px 0
+    }
+
+    .msg-right {
+        text-align: right;
+        margin: 4px 0
+    }
+</style>
+
+<div class="main-container">
+    <!-- 左栏65%：上=LOGO+期号+最新开奖 | 下=玩法+选号+投注追号 -->
+    <div class="left-box">
+        <div class="left-top">
+            <div class="logo-row">
+                <div class="lot-logo">LOGO</div>
+                <div class="period-info">
+                    <h3 id="lotteryTitle">彩种名称</h3>
+                    <div>当前期号：<span id="currPeriod"></span></div>
+                    <div>距截止：<span id="countTime"></span>｜状态：<span id="betStatus"></span></div>
+                </div>
+            </div>
+            <div class="open-result-item">
+                <b>最新开奖结果</b>
+                <div id="newOpenData">等待加载...</div>
+            </div>
+        </div>
+
+        <div class="left-bottom">
+            <div class="play-type-group" id="playGroup">
+                <!-- 玩法按钮JS动态渲染 -->
+            </div>
+
+            <div class="num-wrap" id="numWrap">
+                <!-- 选号区域JS渲染 -->
+            </div>
+
+            <div class="stat-area">
+                <span>投注倍数：</span>
+                <select id="multiple">
+                    @for (int m = 1; m <= 10; m++)
+                    {
+                        <option value="@m">@m 倍</option>
+                    }
+                </select>
+
+                <label style="margin-left:15px;"><input type="checkbox" id="chkTrace"> 开启历史期追号</label>
+
+                <button class="submit-btn" id="btnBet">当期投注</button>
+                <button class="submit-btn" id="btnTrace" style="background:#09c;display:none">确认追号</button>
+
+                <span id="traceInputBox" style="display:none;margin-left:10px">
+                    追号期数：<input type="number" id="traceTotal" min="1" value="5" style="width:50px">期
+                </span>
+            </div>
+
+            <div id="traceBox">
+                <div>勾选起始历史期（单选，只能选1个作为追号起点）：</div>
+                <div id="historyPeriodBox" style="margin-top:8px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右栏35%：历史开奖+奖金对照表+中奖公告 -->
+    <div class="right-box">
+        <!-- 1、历史开奖 -->
+        <div class="right-card">
+            <h4>历史开奖记录</h4>
+            <table id="historyTable">
+                <thead>
+                    <tr>
+                        <th>期号</th>
+                        <th>开奖时间</th>
+                        <th>开奖号码</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <!-- 2、奖金对照 -->
+        <div class="right-card">
+            <h4>奖金对照表</h4>
+            <div id="bonusList">
+                <!-- 玩法奖金JS渲染 -->
+            </div>
+        </div>
+        <!-- 3、中奖公告 -->
+        <div class="right-card">
+            <h4>中奖信息公布</h4>
+            <div>暂未公布本期中奖数据</div>
+        </div>
+    </div>
+</div>
+
+<!-- 在线客服悬浮 -->
+<div class="kf-float" id="openKf">客服</div>
+<div class="kf-box" id="kfBox">
+    <div class="kf-title">在线客服</div>
+    <div class="kf-content" id="kfMsg"></div>
+    <div class="kf-input">
+        <input type="text" id="kfText" placeholder="输入消息">
+        <button id="sendKf">发送</button>
+    </div>
+</div>
+<script src="~/js/LotteryIndex.js"></script>
+
+

@@ -1,0 +1,175 @@
+﻿@page
+@model LotteryPlay.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "用户登录";
+    Layout = null; // 强制不使用任何布局
+}
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #08080c;
+            background-image: linear-gradient(rgba(8,8,12,0.9), rgba(8,8,12,0.9));
+            min-height: 100vh;
+            font-family: "Microsoft Yahei", Arial, sans-serif;
+        }
+
+        .card {
+            background: rgba(14,14,20,0.95) !important;
+            border: 1px solid rgba(212,175,55,0.3) !important;
+            border-radius: 14px !important;
+            box-shadow: 0 0 30px rgba(212,175,55,0.2) !important;
+        }
+
+        .card-header {
+            background: transparent !important;
+            border-bottom: 1px solid rgba(212,175,55,0.2) !important;
+            padding: 24px 15px;
+        }
+
+            .card-header h3 {
+                color: #d4af37;
+                font-weight: bold;
+                letter-spacing: 2px;
+                font-size: 26px;
+            }
+
+        .form-label {
+            color: #e5e5e5 !important;
+        }
+
+        .form-control {
+            background-color: #12121a !important;
+            border: 1px solid #333 !important;
+            color: #fff !important;
+            border-radius: 8px !important;
+            height: 48px !important;
+        }
+
+            .form-control:focus {
+                border-color: #d4af37 !important;
+                box-shadow: 0 0 0 0.2rem rgba(212,175,55,0.25) !important;
+                background-color: #12121a !important;
+                color: #fff !important;
+            }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #d4af37, #b88a20) !important;
+            border: none !important;
+            color: #000 !important;
+            font-weight: bold !important;
+            font-size: 16px !important;
+            height: 48px !important;
+            border-radius: 8px !important;
+        }
+
+            .btn-danger:hover {
+                opacity: 0.92 !important;
+            }
+
+        .btn-outline-secondary {
+            border-color: rgba(212,175,55,0.5) !important;
+            color: #d4af37 !important;
+        }
+
+            .btn-outline-secondary:hover {
+                background-color: rgba(212,175,55,0.15) !important;
+                border-color: #d4af37 !important;
+                color: #fff !important;
+            }
+
+        .text-danger {
+            color: #ff5555 !important;
+        }
+
+        .container {
+            padding-top: 80px;
+        }
+        /* 背景浮动彩球 */
+        .ball-item {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.6;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景彩球（随机点位，可按需增删） -->
+    <div class="ball-item" style="width:50px;height:50px;background:#2974bb;top:18%;left:7%;">2</div>
+    <div class="ball-item" style="width:72px;height:72px;background:#279968;top:14%;left:21%;">3</div>
+    <div class="ball-item" style="width:65px;height:65px;background:#bb893c;top:12%;right:8%;">12</div>
+    <div class="ball-item" style="width:42px;height:42px;background:#279968;top:26%;right:9%;">2</div>
+    <div class="ball-item" style="width:38px;height:38px;background:#7952b3;top:42%;left:2%;">11</div>
+    <div class="ball-item" style="width:80px;height:80px;background:#bb893c;top:49%;left:27%;">24</div>
+    <div class="ball-item" style="width:66px;height:66px;background:#279968;top:56%;left:14%;">21</div>
+    <div class="ball-item" style="width:58px;height:58px;background:#c73c3c;top:68%;left:12%;">19</div>
+    <div class="ball-item" style="width:62px;height:62px;background:#279968;top:73%;left:7%;">15</div>
+    <div class="ball-item" style="width:48px;height:48px;background:#2974bb;top:75%;left:10%;">8</div>
+    <div class="ball-item" style="width:52px;height:52px;background:#2974bb;top:82%;left:19%;">20</div>
+    <div class="ball-item" style="width:56px;height:56px;background:#c73c3c;top:86%;left:23%;">25</div>
+    <div class="ball-item" style="width:45px;height:45px;background:#c73c3c;top:93%;left:14%;">7</div>
+    <div class="ball-item" style="width:40px;height:40px;background:#c73c3c;top:91%;left:18%;">1</div>
+    <div class="ball-item" style="width:50px;height:50px;background:#c73c3c;top:76%;right:29%;">13</div>
+    <div class="ball-item" style="width:44px;height:44px;background:#7952b3;top:78%;right:34%;">23</div>
+    <div class="ball-item" style="width:68px;height:68px;background:#279968;top:71%;right:5%;">9</div>
+    <div class="ball-item" style="width:60px;height:60px;background:#bb893c;top:90%;right:10%;">10</div>
+    <div class="ball-item" style="width:42px;height:42px;background:#ffcc22;top:95%;right:3%;">6</div>
+    <div class="ball-item" style="width:75px;height:75px;background:#bb893c;bottom:2%;left:29%;">22</div>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5 col-lg-4">
+                <div class="card shadow-lg">
+                    <div class="card-header text-center">
+                        <h3 class="mb-0">会员登录</h3>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="post">
+                            <div class="mb-3">
+                                <label class="form-label">用户名</label>
+                                <input asp-for="Input.Username" class="form-control" placeholder="请输入用户名" />
+                                <span asp-validation-for="Input.Username" class="text-danger small mt-1 d-block"></span>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">密码</label>
+                                <input asp-for="Input.Password" class="form-control" placeholder="请输入密码" />
+                                <span asp-validation-for="Input.Password" class="text-danger small mt-1 d-block"></span>
+                            </div>
+
+                            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                            <div class="d-grid gap-3">
+                                <button type="submit" class="btn btn-danger btn-lg">立即登录</button>
+                                <a asp-page="./Register" class="btn btn-outline-secondary">没有账号？前往注册</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @section Scripts {
+        <partial name="_ValidationScriptsPartial" />
+    }
+</body>
+</html>

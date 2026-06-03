@@ -1,0 +1,64 @@
+﻿@* 移除 @model LotteryPlay.Pages.IndexModel *@
+
+@{
+    // 从 Session 获取登录信息，不依赖页面模型
+    string userName = Context.Session.GetString("Username") ?? "游客";
+    decimal balance = 0;
+
+    // 仅登录状态下查询余额
+    if (!string.IsNullOrEmpty(userName) && userName != "游客")
+    {
+        var dbContext = Context.RequestServices.GetRequiredService<LotteryPlay.Data.AppDbContext>();
+        var user = dbContext.Users.FirstOrDefault(u => u.Username == userName);
+        balance = user?.Balance ?? 0;
+    }
+}
+
+<div class="top-bar">
+    <div class="left-info">
+        <span>欢迎您：@userName</span>
+        <span style="margin-left:20px;">余额：@balance.ToString("f2") 元</span>
+    </div>
+    <div class="right-actions">
+        @if (userName == "游客")
+        {
+            <a href="/Account/Login" class="btn">去登录</a>
+        }
+        else
+        {
+            <button>免费试玩</button>
+            <a href="/Account/Login" class="btn">退出账号</a>
+        }
+    </div>
+</div>
+
+<style>
+    .top-bar {
+        background: linear-gradient(to bottom, #d92323, #a81a1a);
+        color: #fff;
+        padding: 12px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .top-bar .left-info span {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .top-bar .right-actions button,
+        .top-bar .right-actions .btn {
+            background: #fff;
+            color: #d92323;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+        }
+</style>

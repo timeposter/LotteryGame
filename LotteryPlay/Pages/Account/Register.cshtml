@@ -1,0 +1,140 @@
+﻿@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "用户注册";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card bg-dark text-white border-0 shadow-lg">
+                <div class="card-header text-center border-0">
+                    <h3 class="mb-0">用户注册</h3>
+                    <p class="text-muted">公平 · 安全 · 快捷</p>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <h5 class="text-warning mb-3">账户信息</h5>
+
+                        <div class="mb-3">
+                            <label class="form-label">用户名 <span class="text-muted">(2-10位字符)</span></label>
+                            <input asp-for="Input.Username" class="form-control bg-dark text-white border-secondary" placeholder="请输入用户名" />
+                            <span asp-validation-for="Input.Username" class="text-danger small"></span>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">登录密码 <span class="text-muted">(6-15位)</span></label>
+                                <input asp-for="Input.LoginPassword" class="form-control bg-dark text-white border-secondary" placeholder="请输入密码" />
+                                <span asp-validation-for="Input.LoginPassword" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">确认登录密码</label>
+                                <input asp-for="Input.ConfirmLoginPassword" class="form-control bg-dark text-white border-secondary" placeholder="再输一遍" />
+                                <span asp-validation-for="Input.ConfirmLoginPassword" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">取款密码 <span class="text-muted">(6-15位)</span></label>
+                                <input asp-for="Input.WithdrawPassword" class="form-control bg-dark text-white border-secondary" placeholder="请输入密码" />
+                                <span asp-validation-for="Input.WithdrawPassword" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">确认取款密码</label>
+                                <input asp-for="Input.ConfirmWithdrawPassword" class="form-control bg-dark text-white border-secondary" placeholder="再输一遍" />
+                                <span asp-validation-for="Input.ConfirmWithdrawPassword" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <h5 class="text-warning mb-3">提款账户</h5>
+
+                        <div class="mb-3">
+                            <label class="form-label">真实姓名</label>
+                            <input asp-for="Input.RealName" class="form-control bg-dark text-white border-secondary" placeholder="请输入真实姓名" />
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label">提款方式</label>
+                                <input asp-for="Input.WithdrawMethod" class="form-control bg-dark text-white border-secondary" placeholder="可手输或从右侧选择" />
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">&nbsp;</label>
+                                <select asp-for="Input.WithdrawMethod" class="form-select bg-dark text-white border-secondary">
+                                    <option value="">请选择</option>
+                                    <option value="银行卡">银行卡</option>
+                                    <option value="支付宝">支付宝</option>
+                                    <option value="USDT">USDT</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">提款账号</label>
+                            <input asp-for="Input.WithdrawAccount" class="form-control bg-dark text-white border-secondary" placeholder="请输入银行卡号/支付宝账号/收币地址" />
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">开户省份</label>
+                                <select asp-for="Input.Province" class="form-select bg-dark text-white border-secondary">
+                                    <option value="">请选择省份</option>
+                                    <option value="广东省">广东省</option>
+                                    <option value="浙江省">浙江省</option>
+                                    <option value="江苏省">江苏省</option>
+                                    <!-- 其他省份可自行添加 -->
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">开户城市</label>
+                                <select asp-for="Input.City" class="form-select bg-dark text-white border-secondary">
+                                    <option value="">请选择城市</option>
+                                    <option value="广州市">广州市</option>
+                                    <option value="深圳市">深圳市</option>
+                                    <option value="杭州市">杭州市</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <h5 class="text-warning mb-3">联系方式</h5>
+
+                        <div class="mb-4">
+                            <label class="form-label">QQ号码 <span class="text-muted">(可选填)</span></label>
+                            <input asp-for="Input.QQ" class="form-control bg-dark text-white border-secondary" placeholder="请输入QQ号码" />
+                        </div>
+
+                        <h5 class="text-warning mb-3">安全验证</h5>
+
+                        <div class="row mb-4 align-items-center">
+                            <div class="col-md-4">
+                                <div class="bg-dark border border-secondary rounded p-2 text-center">
+                                    <span class="text-warning fs-4">@Model.CaptchaNum1 + @Model.CaptchaNum2 = ?</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <input asp-for="Input.CaptchaResult" class="form-control bg-dark text-white border-secondary" placeholder="请输入计算结果" />
+                                <span asp-validation-for="Input.CaptchaResult" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-outline-light rounded-circle" title="刷新验证码">↻</button>
+                            </div>
+                        </div>
+
+                        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg">立即注册</button>
+                            <a asp-page="./Login" class="btn btn-outline-secondary">已有账号？去登录</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
