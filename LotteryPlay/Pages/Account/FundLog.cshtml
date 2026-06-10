@@ -2,6 +2,8 @@
 @model LotteryPlay.Pages.Account.FundLogModel
 @{
     ViewData["Title"] = "资金明细";
+    Layout = "_Layout";
+
 }
 <style>
     * {
@@ -16,15 +18,7 @@
         color: #333;
     }
 
-    .top-bar {
-        background: #fff;
-        border-bottom: 1px solid #eee;
-        padding: 8px 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 14px;
-    }
+    
 
     .red {
         color: red;
@@ -75,19 +69,6 @@
     }
 </style>
 
-<div class="top-bar">
-    <div>欢迎您：<span class="red">@HttpContext.Session.GetString("Username")</span> | 余额：<span class="red">@Model.Balance.ToString("f2")</span> 元</div>
-    <div><a href="/Account/Logout">退出账号</a></div>
-</div>
-
-<div class="account-subnav">
-    <a href="/Account/Info">个人资料</a>
-    <a href="/Account/Pwd">修改密码</a>
-    <a href="/Account/FundLog" style="font-weight:bold;">资金明细</a>
-    <a href="/Account/Recharge">我要充值</a>
-    <a href="/Account/Withdraw">我要提款</a>
-    <a href="/">返回投注大厅</a>
-</div>
 
 <div class="container">
     <h3 style="margin:15px 0;">账户资金流水明细</h3>

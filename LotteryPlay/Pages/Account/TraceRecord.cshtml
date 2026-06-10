@@ -60,6 +60,8 @@
             </tr>
         </thead>
         <tbody>
+            @if(Model.List!=null&&Model.List.Any())
+            {
             @foreach (var item in Model.List)
             {
                 <tr>
@@ -84,6 +86,7 @@
                         }
                     </td>
                 </tr>
+            }
             }
             @if (!Model.List.Any())
             {

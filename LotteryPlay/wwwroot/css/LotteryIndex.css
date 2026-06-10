@@ -1,0 +1,306 @@
+﻿* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #fcf2f2;
+    font-size: 13px;
+    color: #333;
+}
+
+/*顶部用户栏*/
+.top-user-bar {
+    background: #d81828;
+    color: #fff;
+    padding: 8px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .top-user-bar span {
+        font-size: 14px;
+    }
+
+.balance-text {
+    color: #ffdd70;
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.container-wrap {
+    max-width: 1320px;
+    margin: 14px auto;
+    padding: 0 10px;
+}
+
+.main-content {
+    display: flex;
+    gap: 14px;
+}
+
+.bet-left {
+    width: 72%;
+    border: 1px solid #d81828;
+    background: #fff;
+    padding: 14px;
+    border-radius: 6px;
+}
+
+.info-right {
+    width: 28%;
+}
+
+/*头部彩种期号*/
+.bet-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: linear-gradient(to bottom,var(--startColor,#fe5907),var(--endColor,#ffffff));
+}
+.gradient-border-box {
+    padding: 1px; /*边框宽度*/
+    border-radius: 8px;
+    background: linear-gradient(to bottom, var(--borderStart,#d81828), var(--borderEnd,#d4af37));
+}
+/*内部内容容器，白底圆角*/
+.gradient-border-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 7px;
+    background: #fff;
+}
+.grad-box {
+    width: 100%;
+    height: 350px;
+    /* var(起始色,备用值), var(结束色,备用值) */
+    background: linear-gradient(to bottom,var(--startColor,#fe5907),var(--endColor,#ffffff));
+}
+.lottery-logo h3 {
+    margin: 0;
+    color: #d81828;
+    font-size: 22px;
+}
+
+.period-info {
+    line-height: 30px;
+}
+
+.count-down {
+    background: #000;
+    color: #39ff39;
+    font-size: 30px;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    display: inline-block;
+    margin: 0 8px;
+    min-width: 95px;
+    text-align: center;
+}
+
+.open-num {
+    color: #d81828;
+    font-weight: bold;
+    font-size: 17px;
+}
+
+/*彩种选择*/
+.lottery-select-bar {
+    margin: 10px 0;
+}
+
+.lottery-item {
+    display: inline-block;
+    padding: 6px 12px;
+    border: 1px solid #d81828;
+    margin: 0 4px 6px 0;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+    .lottery-item.active {
+        background: #d81828;
+        color: #fff;
+    }
+
+/*玩法标签*/
+.play-tab {
+    margin: 14px 0;
+}
+
+.tab-item {
+    display: inline-block;
+    padding: 6px 13px;
+    border: 1px solid #d81828;
+    margin: 0 5px 7px 0;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+    .tab-item.active {
+        background: #d81828;
+        color: #fff;
+    }
+
+/*选号区域*/
+.num-row {
+    display: flex;
+    align-items: center;
+    margin: 9px 0;
+}
+
+.pos-name {
+    width: 54px;
+    background: #d81828;
+    color: #fff;
+    text-align: center;
+    padding: 6px 0;
+    border-radius: 3px 0 0 3px;
+}
+
+.num-items span {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    border: 1px solid #c91122;
+    margin: 0 3px;
+    cursor: pointer;
+    background: #fff;
+    border-radius: 3px;
+    user-select: none;
+}
+
+    .num-items span.active {
+        background: #d81828;
+        color: #fff;
+        border-color: #d81828;
+    }
+
+.attr-tag {
+    margin-left: 12px;
+}
+
+    .attr-tag span {
+        border: 1px solid #c91122;
+        padding: 3px 6px;
+        margin: 0 3px;
+        cursor: pointer;
+        border-radius: 3px;
+    }
+
+/*机选按钮区*/
+.random-bet-wrap {
+    margin: 18px 0;
+    padding: 12px;
+    background: #f9f3f3;
+    border-radius: 5px;
+}
+
+.random-btn-group button {
+    border: 1px solid #d81828;
+    background: #fff;
+    padding: 5px 11px;
+    margin: 0 4px;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+    .random-btn-group button:hover {
+        background: #d81828;
+        color: #fff;
+    }
+
+/*底部投注栏*/
+.bet-footer {
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.submit-btn {
+    background: #d81828;
+    color: #fff;
+    border: 2px solid #d4af37;
+    padding: 8px 38px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.trace-input {
+    width: 60px;
+    padding: 3px;
+    border: 1px solid #ccc;
+}
+
+/*右侧卡片*/
+.info-card {
+    border: 1px solid #e2caca;
+    background: #fff9f9;
+    margin-bottom: 12px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.card-title {
+    background: #d81828;
+    color: #fff;
+    padding: 7px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.list-row {
+    padding: 5px 9px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+}
+
+.bonus-table .table-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 9px;
+    border-bottom: 1px solid #eee;
+}
+
+/*悬浮客服*/
+.float-service {
+    position: fixed;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #d81828;
+    color: #fff;
+    padding: 14px 6px;
+    writing-mode: vertical-lr;
+    letter-spacing: 2px;
+    cursor: pointer;
+}
+
+/*移动端自适应*/
+@media screen and (max-width:991px) {
+    .main-content {
+        flex-direction: column;
+    }
+
+    .bet-left, .info-right {
+        width: 100%;
+    }
+}

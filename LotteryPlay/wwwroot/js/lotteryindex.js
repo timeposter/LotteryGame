@@ -127,7 +127,7 @@ function loadLottery() {
                 var item = res.data[i];
                 html += '<div class="lottery-nav-item" data-id="' + item.id + '">' + item.lotteryName + '</div>';
             }
-            $("#lotteryNav").html(html);
+            $("#lottery-nav").html(html);
 
             currLotteryId = res.data[0].id;
             $("#lotteryNav .lottery-nav-item:first").addClass("active");
@@ -205,11 +205,11 @@ function getCurrentPeriod(lotId) {
 }
 
 $(function () {
-    loadLottery();
-    setInterval(function () {
-        getCurrentPeriod(currLotteryId);
-        getHistory(currLotteryId);
-    }, 2000);
+    //loadLottery();
+    //setInterval(function () {
+    //    getCurrentPeriod(currLotteryId);
+    //    getHistory(currLotteryId);
+    //}, 2000);
 
     // 彩种切换
     $(document).on("click", ".lottery-nav-item", function () {

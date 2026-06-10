@@ -1,4 +1,233 @@
 ﻿@page
 @model LotteryPlay.Pages.Account.BetRecordModel
 @{
+    Layout = "_Layout";
+    ViewData["Title"] = "我的投注记录";
 }
+
+<style>
+    body {
+        background: #fcf2f2;
+        font-size: 13px;
+        color: #333;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 0 15px;
+    }
+
+    .page-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #d81828;
+        margin-bottom: 15px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #eee;
+    }
+
+    /* 筛选按钮区域 */
+    .filter-box {
+        margin-bottom: 15px;
+    }
+
+    .filter-btn {
+        padding: 6px 16px;
+        border: 1px solid #ccc;
+        background: #fff;
+        cursor: pointer;
+        margin-right: 8px;
+        border-radius: 3px;
+    }
+
+        .filter-btn.active {
+            background: #d81828;
+            color: #fff;
+            border-color: #d81828;
+        }
+
+    /* 数据表格 */
+    .record-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+    }
+
+        .record-table th,
+        .record-table td {
+            border: 1px solid #ddd;
+            padding: 10px 6px;
+            text-align: center;
+        }
+
+        .record-table th {
+            background: #f5f5f5;
+            font-weight: bold;
+        }
+
+        .record-table tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+    /* 状态文字样式 */
+    .win-text {
+        color: #00a854;
+        font-weight: bold;
+    }
+
+    .lose-text {
+        color: #666;
+    }
+
+    .trace-type {
+        color: #09c;
+    }
+
+    .manual-type {
+        color: #333;
+    }
+
+    /* 分页区域 */
+    .page-box {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .page-btn {
+        padding: 5px 12px;
+        border: 1px solid #ccc;
+        background: #fff;
+        margin: 0 3px;
+        cursor: pointer;
+        border-radius: 3px;
+    }
+
+        .page-btn:disabled {
+            background: #eee;
+            cursor: not-allowed;
+            color: #999;
+        }
+
+    .page-num {
+        padding: 0 10px;
+        line-height: 28px;
+    }
+
+    /* 空数据提示 */
+    .empty-tip {
+        text-align: center;
+        padding: 40px 0;
+        color: #999;
+        font-size: 14px;
+    }
+</style>
+
+<div class="container">
+    <div class="page-title">我的投注记录</div>
+
+    <!-- 筛选按钮：全部 / 已中奖 / 未中奖 -->
+    <div class="filter-box">
+        <a href="/Record?FilterType=0" class="filter-btn @(Model.FilterType == 0 ? "active" : "")">全部记录</a>
+        <a href="/Record?FilterType=1" class="filter-btn @(Model.FilterType == 1 ? "active" : "")">已中奖</a>
+        <a href="/Record?FilterType=2" class="filter-btn @(Model.FilterType == 2 ? "active" : "")">未中奖</a>
+    </div>
+
+    <!-- 投注记录表格 -->
+    @if (Model.BetRecordList.Any())
+    {
+        <table class="record-table">
+            <thead>
+                <tr>
+                    <th>序号</th>
+                    <th>期号</th>
+                    <th>彩种名称</th>
+                    <th>玩法名称</th>
+                    <th>投注号码</th>
+                    <th>投注倍数</th>
+                    <th>投注金额(元)</th>
+                    <th>中奖状态</th>
+                    <th>中奖金额(元)</th>
+                    <th>投注类型</th>
+                    <th>投注时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.BetRecordList)
+                {
+                    <tr>
+                        <!-- 序号 = (当前页-1)*每页条数 + 循环索引+1 -->
+                        <td>@((Model.CurrentPage - 1) * Model.PageSize + Model.BetRecordList.IndexOf(item) + 1)</td>
+                        <td>@item.PeriodNo</td>
+                        <td>@item.Play?.Lottery?.LotteryName</td>
+                        <td>@item.Play?.PlayName</td>
+                        <td>@item.BetNumber</td>
+                        <td>@item.Multiple</td>
+                        <td>@item.BetMoney.ToString("0.00")</td>
+
+                        <!-- 中奖状态 -->
+                        <td>
+                            @if (item.IsWin)
+                            {
+                                <span class="win-text">已中奖</span>
+                            }
+                            else
+                            {
+                                <span class="lose-text">未中奖</span>
+                            }
+                        </td>
+
+                        <!-- 中奖金额 -->
+                        <td>
+                            @if (item.IsWin)
+                            {
+                                @item.WinMoney.ToString("0.00")
+                            }
+                            else
+                            {
+                                <span style="color:#999">--</span>
+                            }
+                        </td>
+
+                        <!-- 投注来源：0=手动 1=追号 -->
+                        <td>
+                            @if (item.SourceType == 0)
+                            {
+                                <span class="manual-type">手动投注</span>
+                            }
+                            else
+                            {
+                                <span class="trace-type">追号投注</span>
+                            }
+                        </td>
+
+                        <!-- 投注时间格式化 -->
+                        <td>@item.CreateTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- 分页控件 -->
+        <div class="page-box">
+            <button class="page-btn"
+                    onclick="location.href='/Record?CurrentPage=@(Model.CurrentPage - 1)&FilterType=@Model.FilterType'"
+                    disabled="@(Model.CurrentPage <= 1)">
+                上一页
+            </button>
+
+            <span class="page-num">第 @Model.CurrentPage 页 / 共 @Model.TotalPage 页 (总计 @Model.TotalCount 条记录)</span>
+
+            <button class="page-btn"
+                    onclick="location.href='/Record?CurrentPage=@(Model.CurrentPage + 1)&FilterType=@Model.FilterType'"
+                    disabled="@(Model.CurrentPage >= Model.TotalPage)">
+                下一页
+            </button>
+        </div>
+    }
+    else
+    {
+        <!-- 无数据提示 -->
+        <div class="empty-tip">暂无投注记录</div>
+    }
+</div>

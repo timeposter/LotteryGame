@@ -1,0 +1,137 @@
+﻿@page
+@model LotteryPlay.Pages.Account.WithdrawModel
+@{
+    ViewData["Title"] = "我要提款";
+    ViewData["ShowBack"] = true;
+    Layout = "_Layout";
+}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: "Microsoft Yahei", Arial, sans-serif;
+        background: #fff;
+        color: #333;
+    }
+
+    .red {
+        color: red;
+        font-weight: bold;
+    }
+
+    .green {
+        color: #00b42a;
+        font-weight: bold;
+    }
+
+    .container {
+        width: 480px;
+        margin: 30px auto;
+        border: 1px solid #eee;
+        padding: 20px;
+        border-radius: 6px;
+    }
+
+    .item {
+        margin: 15px 0;
+        font-size: 14px;
+    }
+
+        .item label {
+            display: inline-block;
+            width: 100px;
+            text-align: right;
+            margin-right: 10px;
+        }
+
+        .item input, .item select {
+            padding: 6px;
+            width: 240px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+            .item input:focus, .item select:focus {
+                outline: none;
+                border-color: #c02020;
+            }
+
+    .btn {
+        padding: 8px 24px;
+        background: #c02020;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+    .msg {
+        text-align: center;
+        margin: 10px 0;
+        color: @Model.MsgColor;
+    }
+
+    .tip-text {
+        font-size: 12px;
+        color: #666;
+        margin-top: 8px;
+        line-height: 1.6;
+        padding: 10px;
+        background: #f9f9f9;
+        border-radius: 4px;
+    }
+</style>
+
+<div class="container">
+    <h3 style="text-align:center;margin-bottom:20px;">账户提款（USDT）</h3>
+
+    <!-- 账户余额 -->
+    <div class="msg">当前账户可用余额：@Model.Balance USDT</div>
+
+    <!-- 提示信息 -->
+    @if (!string.IsNullOrEmpty(Model.Msg))
+    {
+        <div class="msg">@Model.Msg</div>
+    }
+
+    <!-- 提款表单 -->
+    <form method="post">
+        <div class="item">
+            <label>提款金额(USDT)：</label>
+            <input type="number" min="5" step="0.01" asp-for="Money" placeholder="最低提款 5 USDT" required />
+        </div>
+
+        <div class="item">
+            <label>转账链类型：</label>
+            <select asp-for="ChainType" required>
+                <option value="TRC20" selected>TRC20 (波场链，推荐)</option>
+                <option value="ERC20">ERC20 (以太坊链)</option>
+            </select>
+        </div>
+
+        <div class="item">
+            <label>我的收款地址：</label>
+            <input type="text" asp-for="UserReceiveAddr" placeholder="请填写你的USDT钱包地址" required />
+        </div>
+
+        <div class="item" style="text-align:center;margin-top:25px;">
+            <button type="submit" class="btn">提交提款</button>
+        </div>
+    </form>
+
+    <!-- 提款规则提示 -->
+    <div class="tip-text">
+        ⚠️ 请务必选择与地址匹配的链类型，转账错误无法找回<br />
+        ⚠️ 最低提款金额：5 USDT<br />
+        ⚠️ 提交后系统将自动扣除对应余额，请核对地址无误后再提交
+    </div>
+</div>

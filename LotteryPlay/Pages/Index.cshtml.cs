@@ -5,6 +5,9 @@ using LotteryPlay.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
 
 namespace LotteryPlay.Pages
 {
@@ -19,7 +22,7 @@ namespace LotteryPlay.Pages
             _dbContext = dbContext;
         }
 
-        #region 页面加载 - 登录校验 + 用户信息
+        #region 页面加载 - 登录校验 + 同步存储 UserId 到 Session
         public async Task<IActionResult> OnGetAsync()
         {
             var userName = HttpContext.Session.GetString("Username");
@@ -30,8 +33,14 @@ namespace LotteryPlay.Pages
 
             UserName = userName;
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == userName);
-            Balance = user?.Balance ?? 0;
+            if (user == null)
+            {
+                HttpContext.Session.Clear();
+                return RedirectToPage("/Account/Login");
+            }
 
+            Balance = user.Balance;
+            HttpContext.Session.SetString("UserId", user.Id.ToString());
             return Page();
         }
         #endregion
@@ -71,10 +80,9 @@ namespace LotteryPlay.Pages
         }
         #endregion
 
-        #region 原有：期号、开奖记录（保留不变）
+        #region 原有：期号、开奖记录、自动派奖（完整保留）
         public async Task<IActionResult> OnGetCurrentPeriod(int lotId)
         {
-            // 1. 读取彩种配置
             var lotteryConfig = await _dbContext.Lottery.FindAsync(lotId);
             if (lotteryConfig == null || !lotteryConfig.IsEnable)
             {
@@ -84,16 +92,13 @@ namespace LotteryPlay.Pages
             int totalSecond = lotteryConfig.PeriodSecond;
             int stopSecond = lotteryConfig.StopBetSecond;
 
-            // 2. 查询当前未开奖的期号
             var current = await _dbContext.LotteryDatas
                 .Where(m => m.LotteryId == lotId && m.IsOpen == 0)
                 .OrderByDescending(m => m.CreateTime)
                 .FirstOrDefaultAsync();
 
-            // 3. 如果没有当期，或者当期已过期，生成新期号
             if (current == null || current.EndTime < DateTime.Now)
             {
-                //1.随机开奖5位号码
                 Random rd = new Random();
                 List<int> open = new List<int>();
                 for (int i = 0; i < 5; i++) open.Add(rd.Next(0, 10));
@@ -102,7 +107,6 @@ namespace LotteryPlay.Pages
                 current.IsOpen = 1;
                 _dbContext.Update(current);
 
-                //2.当期所有未派奖订单
                 var allBets = await _dbContext.UserBets
                     .Where(w => w.LotteryId == lotId && w.PeriodNo == current.PeriodNo && !w.IsWin)
                     .Include(x => x.Play)
@@ -118,7 +122,6 @@ namespace LotteryPlay.Pages
 
                     if (p.PlayName.Contains("直选"))
                     {
-                        //直选：拆分前端分位号码，判断是否存在开奖对位
                         var userPos = bet.BetNumber.Split('|');
                         bool ok = true;
                         for (int i = 0; i < 5; i++)
@@ -129,7 +132,6 @@ namespace LotteryPlay.Pages
                     }
                     else if (p.PlayName.Contains("组选三"))
                     {
-                        //开奖号码取后三位，判断AAB形态
                         var last3 = openNumArr.Skip(2).Take(3).ToList();
                         var userSel = bet.BetNumber.Split(',').Select(int.Parse).ToList();
                         var g = last3.GroupBy(x => x).Select(g => g.Count()).OrderByDescending(x => x).ToList();
@@ -144,7 +146,6 @@ namespace LotteryPlay.Pages
                         if (isZu6 && last3.All(x => userSel.Contains(x))) win = true;
                     }
 
-                    //中奖派奖
                     if (win)
                     {
                         prize = bet.BetMoney * p.BonusAmount;
@@ -154,14 +155,13 @@ namespace LotteryPlay.Pages
                         bet.WinMoney = prize;
                     }
                 }
-                // 把过期的期号标记为已开奖（可选，也可以不处理）
+
                 if (current != null)
                 {
                     current.IsOpen = 1;
                     _dbContext.LotteryDatas.Update(current);
                 }
 
-                // 生成新期号
                 string periodNo = DateTime.Now.ToString("yyyyMMddHHmmss");
                 DateTime createTime = DateTime.Now;
                 DateTime endTime = createTime.AddSeconds(totalSecond);
@@ -176,9 +176,10 @@ namespace LotteryPlay.Pages
                     EndTime = endTime
                 };
                 _dbContext.LotteryDatas.Add(current);
+
                 var traceList = await _dbContext.UserTrace
-    .Where(w => w.LotteryId == lotId && w.LeftCount > 0 && w.Status == 0)
-    .ToListAsync();
+                    .Where(w => w.LotteryId == lotId && w.LeftCount > 0 && w.Status == 0)
+                    .ToListAsync();
 
                 foreach (var trace in traceList)
                 {
@@ -201,7 +202,6 @@ namespace LotteryPlay.Pages
                 await _dbContext.SaveChangesAsync();
             }
 
-            // 4. 计算剩余时间和投注状态
             TimeSpan leftTime = current.EndTime - DateTime.Now;
             string countTime = leftTime.TotalSeconds > 0
                 ? $"{(int)leftTime.TotalMinutes:D2}:{leftTime.Seconds:D2}"
@@ -218,6 +218,7 @@ namespace LotteryPlay.Pages
                 status = statusText
             });
         }
+
         public async Task<IActionResult> OnGetLotteryHistory(int lotId)
         {
             var history = await _dbContext.LotteryDatas
@@ -236,83 +237,106 @@ namespace LotteryPlay.Pages
         }
         #endregion
 
-        #region 投注接口（改用数据库玩法ID，移除枚举）
-        /// <summary>投注提交</summary>
-        public async Task<IActionResult> OnPostBet(int lotteryId, int playId, string period, string betNum, int multiple)
+        #region 批量投注接口（适配前端投注列表）
+        [HttpPost]
+        public async Task<IActionResult> OnPostBet(int lotteryId, string period, string betItems)
         {
-            //1.获取登录用户（示例固定用户Id=1，正式换登录获取）
-            int uid = 1;
-            var user = await _dbContext.Users.FindAsync(uid);
-            if (user == null) return new JsonResult(new { code = 0, msg = "用户不存在" });
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (!int.TryParse(userIdStr, out int uid) || uid <= 0)
+            {
+                return new JsonResult(new { code = 0, msg = "请先登录" });
+            }
 
-            //2.校验彩种、玩法、当期
-            var lot = await _dbContext.Lottery.FindAsync(lotteryId);
-            var play = await _dbContext.PlayConfig.FindAsync(playId);
+            if (string.IsNullOrWhiteSpace(period) || string.IsNullOrWhiteSpace(betItems))
+            {
+                return new JsonResult(new { code = 0, msg = "请求参数不全" });
+            }
+
+            List<BetItemDto>? betList = null;
+            try
+            {
+                betList = JsonSerializer.Deserialize<List<BetItemDto>>(betItems);
+            }
+            catch
+            {
+                return new JsonResult(new { code = 0, msg = "投注数据格式错误" });
+            }
+
+            if (betList == null || !betList.Any())
+            {
+                return new JsonResult(new { code = 0, msg = "投注列表为空" });
+            }
+
+            var lottery = await _dbContext.Lottery.FindAsync(lotteryId);
             var nowPeriod = await _dbContext.LotteryDatas
                 .FirstOrDefaultAsync(w => w.LotteryId == lotteryId && w.PeriodNo == period && w.IsOpen == 0);
 
-            if (lot == null || !lot.IsEnable) return new JsonResult(new { code = 0, msg = "彩种异常" });
-            if (play == null || !play.IsEnable) return new JsonResult(new { code = 0, msg = "玩法禁用" });
-            if (nowPeriod == null || DateTime.Now >= nowPeriod.EndTime.AddSeconds(-lot.StopBetSecond))
-                return new JsonResult(new { code = 0, msg = "已截止投注" });
+            if (lottery == null || !lottery.IsEnable)
+                return new JsonResult(new { code = 0, msg = "彩种已禁用或不存在" });
 
-            //3.拆分勾选号码数组
-            List<int> nums = betNum.Split(',').Select(int.Parse).ToList();
-            int zhuShu = 0;
+            if (nowPeriod == null || DateTime.Now >= nowPeriod.EndTime.AddSeconds(-lottery.StopBetSecond))
+                return new JsonResult(new { code = 0, msg = "本期投注已截止" });
 
-            //【核心：按玩法计算注数】
-            if (play.PlayName.Contains("直选"))
+            var user = await _dbContext.Users.FindAsync(uid);
+            if (user == null)
+                return new JsonResult(new { code = 0, msg = "用户信息异常" });
+
+            decimal totalAllMoney = 0;
+            int totalAllZhu = 0;
+            var userBetList = new List<UserBet>();
+
+            foreach (var item in betList)
             {
-                //直选：5个位置各选若干，排列组合
-                //格式规范前端：万,千,百,十,个 分段|分隔 如 01|23|5|6|9
-                var posArr = betNum.Split('|');
-                int wan = posArr[0].Length;
-                int qian = posArr[1].Length;
-                int bai = posArr[2].Length;
-                int shi = posArr[3].Length;
-                int ge = posArr[4].Length;
-                zhuShu = wan * qian * bai * shi * ge;
+                var play = await _dbContext.PlayConfig.FindAsync(item.playId);
+                if (play == null || !play.IsEnable)
+                    continue;
+
+                int zhuShu = CalcZhuShu(play.PlayName, item.betNum);
+                if (zhuShu <= 0)
+                    continue;
+
+                decimal singleTotal = zhuShu * item.multiple;
+                totalAllMoney += singleTotal;
+                totalAllZhu += zhuShu;
+
+                userBetList.Add(new UserBet
+                {
+                    UserId = uid,
+                    LotteryId = lotteryId,
+                    PlayId = item.playId,
+                    PeriodNo = period,
+                    BetNumber = item.betNum,
+                    Multiple = item.multiple,
+                    BetMoney = singleTotal,
+                    SourceType = 0,
+                    TraceId = 0
+                });
             }
-            else if (play.PlayName.Contains("组选三"))
+
+            if (!userBetList.Any())
             {
-                //组三：从所选N个号码中选3个，其中2同1异 C(n,2)*(n-2)
-                int n = nums.Count;
-                zhuShu = n * (n - 1) / 2 * (n - 2);
-            }
-            else if (play.PlayName.Contains("组选六"))
-            {
-                //组六：C(n,3)=n*(n-1)*(n-2)/6
-                int n = nums.Count;
-                zhuShu = n * (n - 1) * (n - 2) / 6;
+                return new JsonResult(new { code = 0, msg = "无有效投注号码" });
             }
 
-            if (zhuShu <= 0) return new JsonResult(new { code = 0, msg = "号码不足无法投注" });
-
-            //总投注金额
-            decimal totalMoney = zhuShu * multiple;
-            if (user.Balance < totalMoney) return new JsonResult(new { code = 0, msg = "余额不足" });
-
-            //4.扣余额、新增投注订单
-            user.Balance -= totalMoney;
-            UserBet bet = new UserBet()
+            if (user.Balance < totalAllMoney)
             {
-                UserId = uid,
-                LotteryId = lotteryId,
-                PlayId = playId,
-                PeriodNo = period,
-                BetNumber = betNum,
-                Multiple = multiple,
-                BetMoney = totalMoney,
-                SourceType = 0, //手动下单
-                TraceId = 0
-            };
-            _dbContext.UserBets.Add(bet);
+                return new JsonResult(new { code = 0, msg = $"账户余额不足！本次共需 {totalAllMoney} 元" });
+            }
+
+            user.Balance -= totalAllMoney;
+            _dbContext.UserBets.AddRange(userBetList);
             await _dbContext.SaveChangesAsync();
 
-            return new JsonResult(new { code = 1, msg = $"投注成功！{zhuShu}注，共{totalMoney}元" });
+            return new JsonResult(new
+            {
+                code = 1,
+                msg = $"投注成功！共计 {totalAllZhu} 注，总金额 {totalAllMoney} 元"
+            });
         }
         #endregion
-        /// <summary>添加追号</summary>
+
+        #region 追号相关接口
+        /// <summary>普通追号（当前期开始追号）</summary>
         public async Task<IActionResult> OnPostAddTrace(int lotteryId, int playId, string period, string betNum, int multiple, int traceCount)
         {
             int uid = Convert.ToInt32(HttpContext.Session.GetString("UserId"));
@@ -332,10 +356,8 @@ namespace LotteryPlay.Pages
             if (user.Balance < totalNeed)
                 return new JsonResult(new { code = 0, msg = $"余额不足，追号共需{totalNeed}元" });
 
-            //1、预扣全部追号金额
             user.Balance -= totalNeed;
 
-            //2、新增追号计划
             UserTrace trace = new UserTrace()
             {
                 UserId = uid,
@@ -349,9 +371,8 @@ namespace LotteryPlay.Pages
                 PerMoney = perMoney
             };
             _dbContext.UserTrace.Add(trace);
-            _dbContext.SaveChanges(); //先保存拿到Trace.Id
+            await _dbContext.SaveChangesAsync();
 
-            //3、【关键】当期直接生成第1条投注单（追号来源）
             UserBet firstBet = new UserBet()
             {
                 UserId = uid,
@@ -366,14 +387,103 @@ namespace LotteryPlay.Pages
             };
             _dbContext.UserBets.Add(firstBet);
 
-            //4、追号剩余期数 -1（已经用掉1期）
             trace.LeftCount -= 1;
-
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
 
             return new JsonResult(new { code = 1, msg = $"追号成功！首期已下单，剩余{trace.LeftCount}期自动追投" });
         }
-        //共用算注数方法（和投注共用）
+
+        /// <summary>【改造后】获取历史期号 + 投注截止时间（前端列表展示用）</summary>
+        public async Task<JsonResult> OnGetGetHistoryPeriod(int lid)
+        {
+            var lottery = await _dbContext.Lottery.FindAsync(lid);
+            int stopSecond = lottery?.StopBetSecond ?? 0;
+
+            var list = await _dbContext.LotteryDatas
+                .Where(w => w.LotteryId == lid && w.IsOpen == 1)
+                .OrderByDescending(o => o.PeriodNo)
+                .Take(20)
+                .Select(x => new
+                {
+                    x.PeriodNo,
+                    // 计算真实投注截止时间：期结束时间 - 停售秒数
+                    StopTime = x.EndTime.AddSeconds(-stopSecond)
+                })
+                .ToListAsync();
+
+            return new JsonResult(list);
+        }
+
+        /// <summary>【重构】历史期追号：支持多期号 + 每期独立倍数</summary>
+        public async Task<IActionResult> OnPostAddHistoryTrace(int lid, int pid, string betNum, int traceCount, List<string> periodList, List<int> mulList)
+        {
+            // 登录校验
+            if (!int.TryParse(HttpContext.Session.GetString("UserId"), out int uid) || uid <= 0)
+                return new JsonResult(new { code = 0, msg = "未登录" });
+
+            var user = await _dbContext.Users.FindAsync(uid);
+            var play = await _dbContext.PlayConfig.FindAsync(pid);
+            var lottery = await _dbContext.Lottery.FindAsync(lid);
+
+            if (user == null || play == null || lottery == null)
+                return new JsonResult(new { code = 0, msg = "基础数据异常" });
+
+            // 校验参数：期号、倍数数量必须一致
+            if (periodList == null || mulList == null || periodList.Count != mulList.Count || !periodList.Any())
+                return new JsonResult(new { code = 0, msg = "请至少选择一条历史期" });
+
+            // 预计算总扣款金额
+            decimal totalDeduct = 0;
+            var traceAddList = new List<UserTrace>();
+
+            foreach (var item in periodList.Zip(mulList, (p, m) => new { Period = p, Multiple = m }))
+            {
+                // 校验倍数
+                if (item.Multiple < 1) continue;
+
+                // 计算单期金额
+                int zhu = CalcZhuShu(play.PlayName, betNum);
+                decimal perMoney = zhu * item.Multiple;
+                totalDeduct += perMoney * traceCount;
+
+                // 构建追号计划
+                traceAddList.Add(new UserTrace
+                {
+                    UserId = uid,
+                    LotteryId = lid,
+                    PlayId = pid,
+                    StartPeriod = item.Period,
+                    TotalCount = traceCount,
+                    LeftCount = traceCount,
+                    BetNumber = betNum,
+                    Multiple = item.Multiple,
+                    PerMoney = perMoney,
+                    Status = 0
+                });
+            }
+
+            // 无有效数据
+            if (!traceAddList.Any())
+                return new JsonResult(new { code = 0, msg = "无有效追号配置，请检查倍数" });
+
+            // 余额校验
+            if (user.Balance < totalDeduct)
+                return new JsonResult(new { code = 0, msg = $"余额不足，全部追号共需 {totalDeduct:0.00} 元" });
+
+            // 批量新增追号计划 + 扣余额
+            user.Balance -= totalDeduct;
+            _dbContext.UserTrace.AddRange(traceAddList);
+            await _dbContext.SaveChangesAsync();
+
+            return new JsonResult(new
+            {
+                code = 1,
+                msg = $"追号创建成功！共创建 {traceAddList.Count} 条追号计划，连续 {traceCount} 期自动追投"
+            });
+        }
+        #endregion
+
+        #region 共用工具方法：计算注数（直选/组三/组六通用）
         private int CalcZhuShu(string playName, string betNum)
         {
             int zhu = 0;
@@ -386,60 +496,25 @@ namespace LotteryPlay.Pages
             {
                 var nums = betNum.Split(',').Select(int.Parse).ToList();
                 int n = nums.Count;
-                if (playName.Contains("组三"))
+                if (playName.Contains("组三") || playName.Contains("组选三"))
                     zhu = n * (n - 1) / 2 * (n - 2);
-                else if (playName.Contains("组六"))
+                else if (playName.Contains("组六") || playName.Contains("组选六"))
                     zhu = n * (n - 1) * (n - 2) / 6;
             }
             return zhu;
         }
-        public async Task<JsonResult> OnGetGetHistoryPeriod(int lid)
+        #endregion
+
+        #region 前端投注列表对应实体类
+        public class BetItemDto
         {
-            var list = await _dbContext.LotteryDatas
-                .Where(w => w.LotteryId == lid && w.IsOpen == 1)
-                .OrderByDescending(o => o.PeriodNo)
-                .Take(20)
-                .Select(x => new { x.PeriodNo })
-                .ToListAsync();
-            return new JsonResult(list);
+            public int playId { get; set; }
+            public string playName { get; set; } = string.Empty;
+            public string betNum { get; set; } = string.Empty;
+            public int multiple { get; set; }
+            public decimal singleMoney { get; set; }
+            public string lineMoney { get; set; } = string.Empty;
         }
-
-        public async Task<IActionResult> OnPostAddHistoryTrace(int lid, int pid, string startPer, string betNum, int mul, int traceCount)
-        {
-            int uid = int.Parse(HttpContext.Session.GetString("UserId"));
-            var user = await _dbContext.Users.FindAsync(uid);
-            var play = await _dbContext.PlayConfig.FindAsync(pid);
-            if (user == null) return new JsonResult(new { code = 0, msg = "未登录" });
-
-            //计算单期金额
-            int zhu = CalcZhuShu(play.PlayName, betNum);
-            decimal perMoney = zhu * mul;
-            decimal totalCost = perMoney * traceCount;
-
-            if (user.Balance < totalCost)
-                return new JsonResult(new { code = 0, msg = $"余额不足，总共需要{totalCost}元" });
-
-            //一次性预扣全款
-            user.Balance -= totalCost;
-
-            //生成追号计划：起始期=勾选历史期，剩余总期数
-            UserTrace trace = new UserTrace
-            {
-                UserId = uid,
-                LotteryId = lid,
-                PlayId = pid,
-                StartPeriod = startPer,
-                TotalCount = traceCount,
-                LeftCount = traceCount,
-                BetNumber = betNum,
-                Multiple = mul,
-                PerMoney = perMoney,
-                Status = 0
-            };
-            _dbContext.UserTrace.Add(trace);
-            await _dbContext.SaveChangesAsync();
-
-            return new JsonResult(new { code = 1, msg = $"追号创建成功！起始期：{startPer}，连续{traceCount}期自动追投" });
-        }
+        #endregion
     }
 }

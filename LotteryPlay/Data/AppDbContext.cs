@@ -20,6 +20,8 @@ namespace LotteryPlay.Data
         public DbSet<LotteryModels.Lottery> Lottery { get; set; } = null!;
         public DbSet<PlayConfig> PlayConfig { get; set; } = null!;
         public DbSet<UserTrace> UserTrace { get; set; }
+        public DbSet<RechargeOrder> RechargeOrders { get; set; }
+        public DbSet<WithdrawOrder> WithdrawOrders { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();

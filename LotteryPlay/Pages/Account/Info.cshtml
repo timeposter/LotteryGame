@@ -2,6 +2,7 @@
 @model LotteryPlay.Pages.Account.InfoModel
 @{
     ViewData["Title"] = "个人资料";
+    Layout = "_Layout";
 }
 <style>
     * {
@@ -73,11 +74,6 @@
     }
 </style>
 
-<div class="top-bar">
-    <div>欢迎您：<span class="red">@Model.UserName</span> | 余额：<span class="red">@Model.Balance.ToString("f2")</span> 元</div>
-    <div><a href="/Account/Logout">退出账号</a></div>
-</div>
-
 <div class="account-subnav">
     <a href="/Account/Info" style="font-weight:bold;">个人资料</a>
     <a href="/Account/Pwd">修改密码</a>
@@ -85,23 +81,4 @@
     <a href="/Account/Recharge">我要充值</a>
     <a href="/Account/Withdraw">我要提款</a>
     <a href="/">返回投注大厅</a>
-</div>
-
-<div class="container">
-    <h3 style="text-align:center;margin-bottom:20px;">个人资料</h3>
-    <div class="item">
-        <label>账号：</label>
-        <span>@Model.UserName</span>
-    </div>
-    <div class="item">
-        <label>账户余额：</label>
-        <span class="red">@Model.Balance.ToString("f2") 元</span>
-    </div>
-    <div class="item">
-        <label>注册时间：</label>
-        <span>@Model.RegisterTime.ToString("yyyy-MM-dd HH:mm:ss")</span>
-    </div>
-    <div class="item" style="text-align:center;margin-top:30px;">
-        <a href="/" class="btn">返回大厅</a>
-    </div>
 </div>

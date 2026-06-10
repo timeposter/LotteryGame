@@ -17,13 +17,13 @@ namespace LotteryPlay.Pages.Account
             _db = db;
         }
 
-        public List<UserTrace> List { get; set; }
+        public List<UserTrace> List { get; set; } = new List<UserTrace>();
 
         public async Task OnGetAsync()
         {
             if (!int.TryParse(HttpContext.Session.GetString("UserId"), out int uid))
             {
-                Response.Redirect("/Login");
+                Response.Redirect("/Account/Login");
                 return;
             }
             List = await _db.UserTrace

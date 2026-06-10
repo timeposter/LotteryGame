@@ -2,6 +2,8 @@
 @model LotteryPlay.Pages.Account.RechargeModel
 @{
     ViewData["Title"] = "我要充值";
+    ViewData["ShowBack"] = true;
+    Layout = "_Layout";
 }
 <style>
     * {
@@ -11,19 +13,9 @@
     }
 
     body {
-        font-family: "Microsoft Yahei",Arial,sans-serif;
+        font-family: "Microsoft Yahei", Arial, sans-serif;
         background: #fff;
         color: #333;
-    }
-
-    .top-bar {
-        background: #fff;
-        border-bottom: 1px solid #eee;
-        padding: 8px 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 14px;
     }
 
     .red {
@@ -31,24 +23,17 @@
         font-weight: bold;
     }
 
-    .account-subnav {
-        background: #fef0f0;
-        border-bottom: 1px solid #f8c0c0;
-        padding: 6px 15px;
-        font-size: 12px;
+    .green {
+        color: #00b42a;
+        font-weight: bold;
     }
 
-        .account-subnav a {
-            color: #c02020;
-            text-decoration: none;
-            margin-right: 15px;
-        }
-
     .container {
-        width: 450px;
+        width: 480px;
         margin: 30px auto;
         border: 1px solid #eee;
         padding: 20px;
+        border-radius: 6px;
     }
 
     .item {
@@ -63,55 +48,221 @@
             margin-right: 10px;
         }
 
-        .item input {
+        .item input, .item select {
             padding: 6px;
-            width: 220px;
+            width: 240px;
             border: 1px solid #ccc;
+            border-radius: 4px;
         }
 
+            .item input:focus, .item select:focus {
+                outline: none;
+                border-color: #c02020;
+            }
+
     .btn {
-        padding: 6px 20px;
+        padding: 8px 24px;
         background: #c02020;
         color: #fff;
         border: none;
         border-radius: 4px;
         cursor: pointer;
+        font-size: 14px;
     }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
 
     .msg {
         text-align: center;
         margin: 10px 0;
         color: @Model.MsgColor;
     }
+
+    /* 支付区域样式 */
+    .pay-box {
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 1px dashed #eee;
+    }
+
+    .pay-qrcode {
+        text-align: center;
+        margin: 15px 0;
+    }
+
+    .qrcode-container {
+        width: 180px;
+        height: 180px;
+        margin: 0 auto;
+        border: 1px solid #eee;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .qrcode-container img {
+            width: 100%;
+            height: 100%;
+        }
+
+    .qrcode-tip {
+        color: #999;
+        font-size: 12px;
+    }
+
+    .addr-box {
+        background: #f9f9f9;
+        padding: 10px;
+        border-radius: 4px;
+        word-break: break-all;
+        margin: 10px 0;
+    }
+
+    .copy-btn {
+        background: #666;
+        color: #fff;
+        border: none;
+        padding: 4px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+        margin-left: 8px;
+    }
+
+    .tip-text {
+        font-size: 12px;
+        color: #666;
+        margin-top: 8px;
+        line-height: 1.6;
+    }
 </style>
 
-<div class="top-bar">
-    <div>欢迎您：<span class="red">@HttpContext.Session.GetString("Username")</span> | 当前余额：<span class="red">@Model.Balance.ToString("f2")</span> 元</div>
-    <div><a href="/Account/Logout">退出账号</a></div>
-</div>
-
-<div class="account-subnav">
-    <a href="/Account/Info">个人资料</a>
-    <a href="/Account/Pwd">修改密码</a>
-    <a href="/Account/FundLog">资金明细</a>
-    <a href="/Account/Recharge" style="font-weight:bold;">我要充值</a>
-    <a href="/Account/Withdraw">我要提款</a>
-    <a href="/">返回投注大厅</a>
-</div>
-
 <div class="container">
-    <h3 style="text-align:center;margin-bottom:20px;">账户充值</h3>
+    <h3 style="text-align:center;margin-bottom:20px;">账户充值（USDT）</h3>
+
+    <!-- 账户余额展示 -->
+    <div class="msg">当前账户余额：@Model.Balance USDT</div>
+
+    <!-- 全局提示信息 -->
     @if (!string.IsNullOrEmpty(Model.Msg))
     {
         <div class="msg">@Model.Msg</div>
     }
-    <form method="post">
+
+    <!-- 充值表单 -->
+    <form method="post" id="rechargeForm">
         <div class="item">
-            <label>充值金额：</label>
-            <input type="number" min="1" step="0.01" asp-for="Money" placeholder="请输入充值金额" />
+            <label>充值金额(USDT)：</label>
+            <input type="number" min="1" step="0.01" asp-for="Money" placeholder="请输入充值金额" required />
+        </div>
+        <div class="item">
+            <label>选择链类型：</label>
+            <select asp-for="ChainType" required>
+                <option value="TRC20" selected>TRC20 (波场链，推荐)</option>
+                <option value="ERC20">ERC20 (以太坊链)</option>
+            </select>
         </div>
         <div class="item" style="text-align:center;margin-top:25px;">
-            <button type="submit" class="btn">立即充值</button>
+            <button type="submit" class="btn">生成充值地址</button>
         </div>
     </form>
+
+    <!-- 支付区域：有订单才显示 -->
+    <div class="pay-box" style="display:@(string.IsNullOrEmpty(Model.OrderNo) ? "none" : "block")">
+        <div class="item">
+            <label>订单编号：</label>
+            <span id="orderNo">@Model.OrderNo</span>
+        </div>
+        <div class="item">
+            <label>支付金额：</label>
+            <span id="payMoney">@Model.Money</span> USDT
+        </div>
+        <div class="item">
+            <label>转账链：</label>
+            <span id="payChain">@Model.ChainType</span>
+        </div>
+
+        <!-- 二维码区域 -->
+        <div class="pay-qrcode">
+            <p>请使用对应钱包扫描二维码转账</p>
+            <div class="qrcode-container">
+                @if (!string.IsNullOrEmpty(Model.QrCodeBase64))
+                {
+                    <img id="qrcodeImg" src="@Model.QrCodeBase64" alt="USDT收款二维码" />
+                }
+                else
+                {
+                    <span class="qrcode-tip">二维码生成失败</span>
+                }
+            </div>
+        </div>
+
+        <!-- 收款地址 + 复制按钮 -->
+        <div>
+            <label>收款地址：</label>
+            <div class="addr-box">
+                <span id="receiveAddr">@Model.ReceiveAddress</span>
+                <button class="copy-btn" onclick="copyAddr()">复制地址</button>
+            </div>
+        </div>
+
+        <!-- 温馨提示 -->
+        <div class="tip-text">
+            ⚠️ 请严格选择对应链转账，仅支持 USDT 代币<br />
+            ⚠️ 请足额转账，小额转账无法自动到账<br />
+            ⚠️ 订单15分钟内有效，超时请重新发起充值
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script>
+        var currentOrderNo = "";
+
+        // 复制收款地址
+        function copyAddr() {
+            let addr = $("#receiveAddr").text().trim();
+            let input = document.createElement("input");
+            input.value = addr;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand("Copy");
+            document.body.removeChild(input);
+            alert("地址复制成功！");
+        }
+
+        $(function () {
+            // 赋值订单号，开启轮询
+            @if (!string.IsNullOrEmpty(Model.OrderNo))
+            {
+                    <text>
+                        currentOrderNo = "@Model.OrderNo";
+                        // 二维码加载异常监听
+                        $("#qrcodeImg").on("error", function () {
+                            $(this).parent().html('<span class="qrcode-tip">二维码加载异常，请刷新重试</span>');
+                        });
+                        // 5秒轮询一次订单状态
+                        setInterval(queryOrderStatus, 5000);
+                    </text>
+            }
+        });
+
+        // 轮询查询订单支付状态
+        function queryOrderStatus() {
+            if (!currentOrderNo) return;
+            // Razor Pages Handler 标准请求地址
+            $.get("/Account/Recharge?handler=CheckPayStatus&orderNo=" + currentOrderNo, function (res) {
+                if (res.code === 1) {
+                    alert(res.msg);
+                    window.location.reload();
+                } else if (res.code === -2) {
+                    alert(res.msg);
+                    window.location.reload();
+                }
+            });
+        }
+    </script>
+}

@@ -1,140 +1,327 @@
-﻿@page
-@model RegisterModel
-@{
-    ViewData["Title"] = "用户注册";
+﻿@{
+    Layout = null;
 }
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Microsoft Yahei",sans-serif;
+    }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card bg-dark text-white border-0 shadow-lg">
-                <div class="card-header text-center border-0">
-                    <h3 class="mb-0">用户注册</h3>
-                    <p class="text-muted">公平 · 安全 · 快捷</p>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        <h5 class="text-warning mb-3">账户信息</h5>
+    body {
+        width: 100vw;
+        height: 100vh;
+        background: linear-gradient(135deg,#0c0c20,#1a1030);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    /* 背景浮动彩球 */
+    .ball-item {
+        position: absolute;
+        border-radius: 50%;
+        opacity: 0.6;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+    /* 登录卡片容器 */
+    .login-box {
+        width: 420px;
+        background: #222238;
+        border-radius: 22px;
+        padding: 30px 32px;
+        border: 1px solid #554878;
+        z-index: 9;
+    }
+    /* 顶部品牌 */
+    .brand-top {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
 
-                        <div class="mb-3">
-                            <label class="form-label">用户名 <span class="text-muted">(2-10位字符)</span></label>
-                            <input asp-for="Input.Username" class="form-control bg-dark text-white border-secondary" placeholder="请输入用户名" />
-                            <span asp-validation-for="Input.Username" class="text-danger small"></span>
-                        </div>
+        .brand-top span {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+        }
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">登录密码 <span class="text-muted">(6-15位)</span></label>
-                                <input asp-for="Input.LoginPassword" class="form-control bg-dark text-white border-secondary" placeholder="请输入密码" />
-                                <span asp-validation-for="Input.LoginPassword" class="text-danger small"></span>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">确认登录密码</label>
-                                <input asp-for="Input.ConfirmLoginPassword" class="form-control bg-dark text-white border-secondary" placeholder="再输一遍" />
-                                <span asp-validation-for="Input.ConfirmLoginPassword" class="text-danger small"></span>
-                            </div>
-                        </div>
+    .b1 {
+        background: #e84444;
+    }
 
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label">取款密码 <span class="text-muted">(6-15位)</span></label>
-                                <input asp-for="Input.WithdrawPassword" class="form-control bg-dark text-white border-secondary" placeholder="请输入密码" />
-                                <span asp-validation-for="Input.WithdrawPassword" class="text-danger small"></span>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">确认取款密码</label>
-                                <input asp-for="Input.ConfirmWithdrawPassword" class="form-control bg-dark text-white border-secondary" placeholder="再输一遍" />
-                                <span asp-validation-for="Input.ConfirmWithdrawPassword" class="text-danger small"></span>
-                            </div>
-                        </div>
+    .b2 {
+        background: #f7bc79;
+    }
 
-                        <h5 class="text-warning mb-3">提款账户</h5>
+    .b3 {
+        background: #ffcc22;
+    }
 
-                        <div class="mb-3">
-                            <label class="form-label">真实姓名</label>
-                            <input asp-for="Input.RealName" class="form-control bg-dark text-white border-secondary" placeholder="请输入真实姓名" />
-                        </div>
+    .b4 {
+        background: #f7bc79;
+    }
 
-                        <div class="row mb-3">
-                            <div class="col-md-8">
-                                <label class="form-label">提款方式</label>
-                                <input asp-for="Input.WithdrawMethod" class="form-control bg-dark text-white border-secondary" placeholder="可手输或从右侧选择" />
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">&nbsp;</label>
-                                <select asp-for="Input.WithdrawMethod" class="form-select bg-dark text-white border-secondary">
-                                    <option value="">请选择</option>
-                                    <option value="银行卡">银行卡</option>
-                                    <option value="支付宝">支付宝</option>
-                                    <option value="USDT">USDT</option>
-                                </select>
-                            </div>
-                        </div>
+    .b5 {
+        background: #54a8f2;
+    }
 
-                        <div class="mb-3">
-                            <label class="form-label">提款账号</label>
-                            <input asp-for="Input.WithdrawAccount" class="form-control bg-dark text-white border-secondary" placeholder="请输入银行卡号/支付宝账号/收币地址" />
-                        </div>
+    .login-title {
+        text-align: center;
+        color: #fff;
+        font-size: 32px;
+        font-weight: bold;
+        letter-spacing: 2px;
+    }
 
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label">开户省份</label>
-                                <select asp-for="Input.Province" class="form-select bg-dark text-white border-secondary">
-                                    <option value="">请选择省份</option>
-                                    <option value="广东省">广东省</option>
-                                    <option value="浙江省">浙江省</option>
-                                    <option value="江苏省">江苏省</option>
-                                    <!-- 其他省份可自行添加 -->
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">开户城市</label>
-                                <select asp-for="Input.City" class="form-select bg-dark text-white border-secondary">
-                                    <option value="">请选择城市</option>
-                                    <option value="广州市">广州市</option>
-                                    <option value="深圳市">深圳市</option>
-                                    <option value="杭州市">杭州市</option>
-                                </select>
-                            </div>
-                        </div>
+    .sub-title {
+        text-align: center;
+        color: #c9c9e2;
+        font-size: 14px;
+        margin: 6px 0 26px;
+        position: relative;
+    }
 
-                        <h5 class="text-warning mb-3">联系方式</h5>
+        .sub-title::before, .sub-title::after {
+            content: "——";
+            margin: 0 12px;
+            color: #ffcc22;
+        }
+    /* 合作商模块 */
+    .partner-wrap {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 30px;
+    }
 
-                        <div class="mb-4">
-                            <label class="form-label">QQ号码 <span class="text-muted">(可选填)</span></label>
-                            <input asp-for="Input.QQ" class="form-control bg-dark text-white border-secondary" placeholder="请输入QQ号码" />
-                        </div>
+    .partner-item {
+        text-align: center;
+        color: #ddd;
+        font-size: 12px;
+    }
 
-                        <h5 class="text-warning mb-3">安全验证</h5>
+        .partner-item img {
+            width: 54px;
+            height: 54px;
+            object-fit: contain;
+            margin-bottom: 6px;
+            border-radius: 50%;
+            background: #fff;
+        }
+    /* 表单 */
+    .form-item {
+        margin-bottom: 18px;
+    }
 
-                        <div class="row mb-4 align-items-center">
-                            <div class="col-md-4">
-                                <div class="bg-dark border border-secondary rounded p-2 text-center">
-                                    <span class="text-warning fs-4">@Model.CaptchaNum1 + @Model.CaptchaNum2 = ?</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <input asp-for="Input.CaptchaResult" class="form-control bg-dark text-white border-secondary" placeholder="请输入计算结果" />
-                                <span asp-validation-for="Input.CaptchaResult" class="text-danger small"></span>
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-outline-light rounded-circle" title="刷新验证码">↻</button>
-                            </div>
-                        </div>
+        .form-item label {
+            display: block;
+            color: #ddd;
+            font-size: 15px;
+            margin-bottom: 6px;
+        }
 
-                        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+    .input-wrap {
+        position: relative;
+    }
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-danger btn-lg">立即注册</button>
-                            <a asp-page="./Login" class="btn btn-outline-secondary">已有账号？去登录</a>
-                        </div>
-                    </form>
-                </div>
+        .input-wrap input {
+            width: 100%;
+            height: 46px;
+            background: #32324e;
+            border: 1px solid #4c4c70;
+            border-radius: 10px;
+            padding: 0 42px;
+            color: #fff;
+            font-size: 15px;
+        }
+
+            .input-wrap input:focus {
+                outline: none;
+                border-color: #ffcc22;
+            }
+
+        .input-wrap .icon-left {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
+        }
+
+    .eye-btn {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #aaa;
+        cursor: pointer;
+    }
+
+    .reg-link {
+        text-align: right;
+        margin: -8px 0 22px;
+    }
+
+        .reg-link a {
+            color: #ffcc22;
+            font-size: 14px;
+            text-decoration: none;
+        }
+    /* 按钮 */
+    .login-btn {
+        width: 100%;
+        height: 52px;
+        background: linear-gradient(90deg,#d82020,#f23b3b);
+        border: none;
+        border-radius: 12px;
+        color: #fff;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-bottom: 14px;
+    }
+
+    .app-btn {
+        width: 100%;
+        height: 52px;
+        background: linear-gradient(90deg,#06b986,#20d29b);
+        border: none;
+        border-radius: 12px;
+        color: #fff;
+        font-size: 17px;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .app-tag {
+        position: absolute;
+        right: 16px;
+        top: -8px;
+        background: #ffcc22;
+        color: #222;
+        font-size: 12px;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+
+    .copyright {
+        text-align: center;
+        color: #888;
+        font-size: 13px;
+        margin-top: 22px;
+    }
+</style>
+<body>
+    <!-- 背景彩球（随机点位，可按需增删） -->
+    <div class="ball-item" style="width:50px;height:50px;background:#2974bb;top:18%;left:7%;">2</div>
+    <div class="ball-item" style="width:72px;height:72px;background:#279968;top:14%;left:21%;">3</div>
+    <div class="ball-item" style="width:65px;height:65px;background:#bb893c;top:12%;right:8%;">12</div>
+    <div class="ball-item" style="width:42px;height:42px;background:#279968;top:26%;right:9%;">2</div>
+    <div class="ball-item" style="width:38px;height:38px;background:#7952b3;top:42%;left:2%;">11</div>
+    <div class="ball-item" style="width:80px;height:80px;background:#bb893c;top:49%;left:27%;">24</div>
+    <div class="ball-item" style="width:66px;height:66px;background:#279968;top:56%;left:14%;">21</div>
+    <div class="ball-item" style="width:58px;height:58px;background:#c73c3c;top:68%;left:12%;">19</div>
+    <div class="ball-item" style="width:62px;height:62px;background:#279968;top:73%;left:7%;">15</div>
+    <div class="ball-item" style="width:48px;height:48px;background:#2974bb;top:75%;left:10%;">8</div>
+    <div class="ball-item" style="width:52px;height:52px;background:#2974bb;top:82%;left:19%;">20</div>
+    <div class="ball-item" style="width:56px;height:56px;background:#c73c3c;top:86%;left:23%;">25</div>
+    <div class="ball-item" style="width:45px;height:45px;background:#c73c3c;top:93%;left:14%;">7</div>
+    <div class="ball-item" style="width:40px;height:40px;background:#c73c3c;top:91%;left:18%;">1</div>
+    <div class="ball-item" style="width:50px;height:50px;background:#c73c3c;top:76%;right:29%;">13</div>
+    <div class="ball-item" style="width:44px;height:44px;background:#7952b3;top:78%;right:34%;">23</div>
+    <div class="ball-item" style="width:68px;height:68px;background:#279968;top:71%;right:5%;">9</div>
+    <div class="ball-item" style="width:60px;height:60px;background:#bb893c;top:90%;right:10%;">10</div>
+    <div class="ball-item" style="width:42px;height:42px;background:#ffcc22;top:95%;right:3%;">6</div>
+    <div class="ball-item" style="width:75px;height:75px;background:#bb893c;bottom:2%;left:29%;">22</div>
+
+    <!-- 登录主体卡片 -->
+    <div class="login-box">
+        <div class="brand-top">
+            <span class="b1">金</span>
+            <span class="b2">沙</span>
+            <span class="b3">★</span>
+            <span class="b4">娱</span>
+            <span class="b5">乐</span>
+        </div>
+        <h1 class="login-title">会员登录</h1>
+        <div class="sub-title">公平·安全·快捷</div>
+
+        <!-- 合作赞助商 -->
+        <div class="partner-wrap">
+            <div class="partner-item">
+                <img src="~/img/ala.png" alt="阿拉维斯">
+                <div>阿拉维斯<br /><small>官方胸前赞助商</small></div>
+            </div>
+            <div class="partner-item">
+                <img src="~/img/como.png" alt="科莫">
+                <div>科莫<br /><small>官方区域合作伙伴</small></div>
+            </div>
+            <div class="partner-item">
+                <img src="~/img/toti.png" alt="托蒂">
+                <div>弗朗切斯科·托蒂<br /><small>亚洲独家品牌形象大使</small></div>
             </div>
         </div>
-    </div>
-</div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+        <!-- 登录表单 -->
+        <form id="loginForm" asp-page-handler="Login" method="post">
+            <div class="form-item">
+                <label>用户名</label>
+                <div class="input-wrap">
+                    <span class="icon-left">👤</span>
+                    <input type="text" name="UserName" placeholder="请输入用户名" required>
+                </div>
+            </div>
+            <div class="form-item">
+                <label>密码</label>
+                <div class="input-wrap">
+                    <span class="icon-left">🔒</span>
+                    <input type="password" id="pwdInput" name="Pwd" placeholder="请输入密码" required>
+                    <span class="eye-btn" id="eyeBtn">👁</span>
+                </div>
+            </div>
+            <div class="reg-link">
+                <a asp-page="/Register">用户注册></a>
+            </div>
+            <button type="submit" class="login-btn">登 录</button>
+        </form>
+
+        <button class="app-btn">
+            🤖 下载 Android APP
+            <span class="app-tag">金沙</span>
+        </button>
+
+        <div class="copyright">Copyright © 2026 金沙娱乐 All Rights Reserved</div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script>
+        //密码显隐切换（原有功能保留）
+        $("#eyeBtn").click(function(){
+            var inp = $("#pwdInput");
+            if(inp.attr("type")=="password"){
+                inp.attr("type","text");
+                $(this).text("🙈");
+            }else{
+                inp.attr("type","password");
+                $(this).text("👁");
+            }
+        })
+        //APP下载按钮点击逻辑可自行绑定跳转下载地址
+        $(".app-btn").click(function(){
+            //window.location.href = "apk下载地址";
+            alert("跳转APP下载页");
+        })
+    </script>
+</body>
