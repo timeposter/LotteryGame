@@ -162,7 +162,7 @@ namespace LotteryPlay.Pages
                     _dbContext.LotteryDatas.Update(current);
                 }
 
-                string periodNo = DateTime.Now.ToString("yyyyMMddHHmmss");
+                string periodNo = await GetNewPeriodNo(lotId);
                 DateTime createTime = DateTime.Now;
                 DateTime endTime = createTime.AddSeconds(totalSecond);
 
@@ -504,6 +504,89 @@ namespace LotteryPlay.Pages
             return zhu;
         }
         #endregion
+        #region 【新增】按规则生成新期号：yyyyMMdd + 3位流水号，每日0点重置001
+        /// <summary>
+        /// 生成新期号
+        /// 规则：每日0点从001开始，每5分钟一期，格式 yyyyMMdd + 3位补零序号
+        /// 每个彩种独立计数
+        /// </summary>
+        /// <param name="lotteryId">彩种ID</param>
+        /// <returns>完整期号</returns>
+        private async Task<string> GetNewPeriodNo(int lotteryId)
+        {
+            DateTime now = DateTime.Now;
+            string todayDateStr = now.ToString("yyyyMMdd");
+            DateTime todayStart = now.Date;
+
+            // 1. 查询当前彩种【今日】所有期号记录
+            var todayPeriodList = await _dbContext.LotteryDatas
+                .Where(d => d.LotteryId == lotteryId && d.CreateTime >= todayStart)
+                .ToListAsync();
+
+            int maxIndex = 0;
+            foreach (var item in todayPeriodList)
+            {
+                string period = item.PeriodNo;
+
+                // ========== 改动1：适配新格式 12位(yyyyMMdd-001) ==========
+                if (period.Length == 12)
+                {
+                    // 格式：20260611-001
+                    // 下标：0~7=日期  8=-  9~11=3位流水号
+                    string indexStr = period.Substring(9, 3);
+                    if (int.TryParse(indexStr, out int idx))
+                    {
+                        if (idx > maxIndex)
+                            maxIndex = idx;
+                    }
+                }
+                // 兼容两种旧格式：时间戳期号、老版纯数字期号，不参与序号计算
+            }
+
+            // 2. 新序号 = 最大序号 + 1；今日无数据则从 1 开始
+            int newIndex = maxIndex + 1;
+
+            // ========== 改动2：拼接格式 日期-3位流水号 ==========
+            string newPeriodNo = $"{todayDateStr}-{newIndex:D3}";
+
+            return newPeriodNo;
+        }
+        #endregion
+
+        /// <summary>
+        /// 获取当前彩种 最新一期开奖结果
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> OnGetLatestOpen(int lotId)
+        {
+            // 1. 校验彩种ID
+            if (lotId <= 0)
+            {
+                return new JsonResult(new { code = 0, msg = "彩种ID无效", data = (object)null });
+            }
+
+            // 2. 查询开奖表：按期号/开奖时间倒序，取最新1条（复用你现有开奖实体）
+            var latest = await _dbContext.LotteryDatas
+                .Where(x => x.LotteryId == lotId&&x.IsOpen==1)
+                .OrderByDescending(x => x.PeriodNo) // 期号倒序（主流排序方式）
+                .FirstOrDefaultAsync();
+
+            // 3. 无开奖数据
+            if (latest == null)
+            {
+                return new JsonResult(new { code = 1, msg = "暂无开奖数据", data = (object)null });
+            }
+
+            // 4. 组装返回数据（字段和历史开奖接口保持一致）
+            var resData = new
+            {
+                period = latest.PeriodNo,
+                openTime = latest.EndTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                openNumber = latest.OpenNumber
+            };
+
+            return new JsonResult(new { code = 1, msg = "获取成功", data = resData });
+        }
 
         #region 前端投注列表对应实体类
         public class BetItemDto

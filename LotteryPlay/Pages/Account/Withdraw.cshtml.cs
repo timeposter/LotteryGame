@@ -40,9 +40,14 @@ namespace LotteryPlay.Pages.Account
         public async Task<IActionResult> OnGetAsync()
         {
             // 登录校验
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            // ========== 1. 登录校验 ==========
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            var userName = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId) || userId <= 0)
+            {
+                // 未登录，跳转到登录页
                 return RedirectToPage("/Account/Login");
+            }
 
             // 读取用户余额
             var user = await _db.Users.FindAsync(userId);
@@ -53,11 +58,14 @@ namespace LotteryPlay.Pages.Account
         /// <summary>提交提款申请</summary>
         public async Task<IActionResult> OnPostAsync()
         {
-            // 1. 登录校验
-            var userId = HttpContext.Session.GetInt32("UserId");
+            // ========== 1. 登录校验 ==========
+            var userIdStr = HttpContext.Session.GetString("UserId");
             var userName = HttpContext.Session.GetString("Username");
-            if (!userId.HasValue || string.IsNullOrEmpty(userName))
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId) || userId <= 0)
+            {
+                // 未登录，跳转到登录页
                 return RedirectToPage("/Account/Login");
+            }
 
             var user = await _db.Users.FindAsync(userId);
             if (user == null)
@@ -111,7 +119,7 @@ namespace LotteryPlay.Pages.Account
                 var withdrawOrder = new WithdrawOrder
                 {
                     OrderNo = orderNo,
-                    UserId = userId.Value,
+                    UserId = userId,
                     UserName = userName,
                     Money = Money,
                     ChainType = ChainType,
@@ -131,7 +139,7 @@ namespace LotteryPlay.Pages.Account
                 // 7. 写入资金流水（Type=2 代表提款）
                 _db.UserFundLogs.Add(new UserFundLog
                 {
-                    UserId = userId.Value,
+                    UserId = userId,
                     UserName = userName,
                     Type = 2,
                     Money = Money,

@@ -20,11 +20,14 @@ namespace LotteryPlay.Pages.Account
 
         public async Task<IActionResult> OnGetAsync()
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
+            // ========== 1. µÇÂ¼Ð£Ñé ==========
+            var userIdStr = HttpContext.Session.GetString("UserId");
             var userName = HttpContext.Session.GetString("Username");
-            if (!userId.HasValue || string.IsNullOrEmpty(userName))
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId) || userId <= 0)
+            {
+                // Î´µÇÂ¼£¬Ìø×ªµ½µÇÂ¼Ò³
                 return RedirectToPage("/Account/Login");
-
+            }
             var user = await _db.Users.FindAsync(userId);
             Balance = user?.Balance ?? 0;
 

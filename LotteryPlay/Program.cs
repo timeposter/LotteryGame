@@ -20,6 +20,13 @@ builder.Services.AddSession(options =>
 {
     options.Cookie.IsEssential = true;
     options.IdleTimeout = TimeSpan.FromHours(2);
+    // Cookie 作用域：全站根路径 /，所有子目录都能读取
+    options.Cookie.Path = "/";
+    // 会话超时时间（2小时，按需修改）
+    options.IdleTimeout = TimeSpan.FromHours(2);
+    // 兼容浏览器隐私模式
+    options.Cookie.IsEssential = true;
+
 });
 
 // 注册SignalR

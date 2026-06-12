@@ -38,20 +38,28 @@ namespace LotteryPlay.Pages.Account
         #endregion
 
         public IActionResult OnGet()
-        {
-            // µÇÂ¼À¹½Ø
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+        { // ========== 1. µÇÂ¼Ð£Ñé ==========
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            var userName = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId) || userId <= 0)
+            {
+                // Î´µÇÂ¼£¬Ìø×ªµ½µÇÂ¼Ò³
                 return RedirectToPage("/Account/Login");
+            }
             return Page();
         }
 
         /// <summary>Ìá½»ÐÞ¸Ä µÇÂ¼ÃÜÂë</summary>
         public async Task<IActionResult> OnPostLoginPwdAsync()
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            // ========== 1. µÇÂ¼Ð£Ñé ==========
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            var userName = HttpContext.Session.GetString("Username");
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId) || userId <= 0)
+            {
+                // Î´µÇÂ¼£¬Ìø×ªµ½µÇÂ¼Ò³
                 return RedirectToPage("/Account/Login");
+            }
 
             var user = await _db.Users.FindAsync(userId);
             if (user == null)

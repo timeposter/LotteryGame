@@ -557,7 +557,7 @@
                         <h3 id="lotteryTitle">彩种名称</h3>
                     </div>
                 </div>
-                <div class="gradient-border-box" style="width:250px">
+                <div class="gradient-border-box" style="width:250px;height:180px">
                     <div class="gradient-border-inner">
                         <div class="period-info">
                             <div style="margin:0 auto;background-color:white;">当前期号：<span id="currPeriod" style="color:red"></span></div>
@@ -569,10 +569,14 @@
                     </div>
                 </div>
 
-                <div class="open-result-item">
+                <div class="gradient-border-box" style="width:250px;height:180px">
+                    <div class="gradient-border-inner">
+                        <div class="period-info">
                     <b>最新开奖结果</b>
                     <div id="newOpenData">等待加载...</div>
-                </div>
+                   </div>
+                   </div>
+                   </div>
             </div>
 
             <div class="left-bottom">
@@ -1003,29 +1007,44 @@
 
             $.get("/Index?handler=GetPlayList&lotteryId=" + lotteryId, function (res) {
                 playList = res.data || [];
-                var playHtml = "";
-                var bonusHtml = "";
+    var bonusHtml = "";
+    var playHtml = "";
+    if (playList.length === 0) {
+        playHtml = "<p style='color:#666;margin:0;'>暂无可用玩法</p>";
+        // 无玩法时，表格显示空提示
 
-                if (playList.length === 0) {
-                    playHtml = "<p style='color:#666;margin:0;'>暂无可用玩法</p>";
-                    bonusHtml = "<p>暂无奖金配置</p>";
-                    $("#numWrap").html("<p style='color:#666;text-align:center;padding:20px;'>暂无玩法，无法选号</p>");
-                } else {
-                    for (var i = 0; i < playList.length; i++) {
-                        var item = playList[i];
-                        var active = i === 0 ? "active" : "";
-                        playHtml += '<button class="' + active + '" data-playid="' + item.id + '">' + item.playName + '</button>';
-                        if (item.BonusAmount > 0) {
-                            bonusHtml += '<p>' + item.playName + '：' + item.bonusAmount + '元</p>';
-                        }
-                    }
-                    currPlayId = playList[0].Id;
-                    currPlayName = playList[0].PlayName;
-                    renderNumPanel(currPlayName);
-                }
+        bonusHtml = '<tr><td colspan="2" style="color:#999;">暂无奖金配置</td></tr>';
+        $("#numWrap").html("<p style='color:#666;text-align:center;padding:20px;'>暂无玩法，无法选号</p>");
+    } else {
+        for (var i = 0; i < playList.length; i++) {
+            var item = playList[i];
+            var active = i === 0 ? "active" : "";
+            playHtml += '<button class="' + active + '" data-playid="' + item.id + '">' + item.playName + '</button>';
 
-                $("#playGroup").html(playHtml);
-                $("#bonusList").html(bonusHtml);
+            // ========== 奖金表格行逻辑 ==========
+            let bonusVal = Number(item.BonusAmount ?? item.bonusAmount ?? 0);
+            let bonusText = "";
+            // 处理奖金：为0/空 → 显示「暂无奖金」，否则显示金额+单位
+            if (isNaN(bonusVal) || bonusVal <= 0) {
+                bonusText = "<span style='color:#999;'>暂无奖金</span>";
+            } else {
+                bonusText = bonusVal + " 元";
+            }
+            // 拼接表格行
+            bonusHtml += `<tr>
+                <td>${item.playName}</td>
+                <td>${bonusText}</td>
+            </tr>`;
+        }
+        currPlayId = playList[0].Id;
+        currPlayName = playList[0].PlayName;
+        renderNumPanel(currPlayName);
+    }
+
+    $("#playGroup").html(playHtml);
+    // 把拼接好的表格行塞入 tbody
+    $("#bonusList").html(bonusHtml);
+
 
                 selectNums = "";
                 $(".num-item").removeClass("selected");
@@ -1049,7 +1068,64 @@
             }
             $("#historyTable tbody").html(html);
         }
+            /**
+     * 加载最新一期开奖结果
+     */
+    function loadLatestOpen(lotId) {
+        // 加载中状态
+        $("#newOpenData").html('<span style="color:#999;">加载中...</span>');
 
+        $.get("/Index?handler=LatestOpen&lotId=" + lotId, function (res) {
+            // 接口返回正常
+            if (res.code === 1) {
+                // 无开奖数据
+                if (!res.data) {
+                    $("#newOpenData").html('<span style="color:#999;">暂无开奖记录</span>');
+                    return;
+                }
+
+                // 解析数据
+                let period = res.data.period;       // 期号
+                let openTime = res.data.openTime;   // 开奖时间
+                let openNum = res.data.openNumber;  // 开奖号码
+
+                // ========== 渲染方案二选一（根据你的需求选） ==========
+                // 方案A：简洁版（一行展示，适合大多数场景）
+                let html = `
+                    <div style="margin:2px 0;">
+                        期号：<span style="color:#d81828;font-weight:bold;">${period}</span>
+                        <br>
+                        开奖时间：${openTime}
+                    </div>
+                    <div style="margin:2px 0;font-size:14px;">
+                        开奖号码：<span style="color:#09c;font-weight:bold;">${openNum}</span>
+                    </div>
+                `;
+
+                // 方案B：分位方块展示（适配5位时时彩/五分彩，万/千/百/十/个）
+                /*
+                let numArr = openNum.split(/[,，\s]/); // 兼容逗号/空格分隔的号码
+                let numHtml = "";
+                numArr.forEach(num => {
+                    numHtml += `<span style="display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;background:#09c;color:#fff;border-radius:3px;margin:0 3px;font-weight:bold;">${num}</span>`;
+                });
+                let html = `
+                    <div style="margin:4px 0;">期号：<span style="color:#d81828;font-weight:bold;">${period}</span> &nbsp;&nbsp;开奖时间：${openTime}</div>
+                    <div style="margin:8px 0;">开奖号码：${numHtml}</div>
+                `;
+                */
+                // =====================================================
+
+                $("#newOpenData").html(html);
+            } else {
+                // 接口业务错误
+                $("#newOpenData").html(`<span style="color:red;">${res.msg}</span>`);
+            }
+        }, "json").fail(function () {
+            // 网络/接口404/500异常
+            $("#newOpenData").html('<span style="color:red;">开奖数据加载失败</span>');
+        });
+    }
         function getHistory(lotId) {
             $.get("/Index?handler=LotteryHistory&lotId=" + lotId, function (res) {
                 if (res.code === 1) renderHistory(res.data);
@@ -1095,6 +1171,7 @@
             currPlayId = parseInt($(this).data("playid"));
             currPlayName = $(this).text();
             renderNumPanel(currPlayName);
+            loadLatestOpen(currLotteryId);
             clearBetList();
         });
 

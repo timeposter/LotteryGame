@@ -118,7 +118,7 @@ namespace LotteryPlay.Services
 
             if (last == null || last.PeriodNo.Length < 8)
             {
-                newPeriod = $"{dateStr}001";
+                newPeriod = $"{dateStr}-001";
             }
             else
             {
@@ -129,7 +129,7 @@ namespace LotteryPlay.Services
                 }
                 else
                 {
-                    newPeriod = $"{dateStr}001";
+                    newPeriod = $"{dateStr}-001";
                 }
             }
 
