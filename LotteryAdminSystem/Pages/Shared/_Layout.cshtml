@@ -1,51 +1,91 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@using LotteryModels
+
+@{
+    string loginName = User.Identity?.Name ?? "";
+}
+<!DOCTYPE html>
+<html lang="zh-CN">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - LotteryAdminSystem</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/LotteryAdminSystem.styles.css" asp-append-version="true" />
+    <title>彩票管理后台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            width: 220px;
+            min-height: 100vh;
+            background: #212529;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding-top: 56px;
+        }
+
+            .sidebar a {
+                color: #adb5bd;
+                padding: 12px 20px;
+                display: block;
+                text-decoration: none;
+            }
+
+                .sidebar a.active, .sidebar a:hover {
+                    background: #495057;
+                    color: #fff;
+                }
+
+        .main-content {
+            margin-left: 220px;
+            padding: 20px;
+            padding-top: 70px;
+        }
+
+        .top-nav {
+            position: fixed;
+            left: 220px;
+            right: 0;
+            height: 56px;
+            background: #343a40;
+            color: white;
+            line-height: 56px;
+            padding: 0 20px;
+            z-index: 99;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">LotteryAdminSystem</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+    <!-- 侧边栏 -->
+    <div class="sidebar">
+        <div class="text-center text-white py-3 border-bottom border-secondary">
+            <h5>彩票管理系统</h5>
+        </div>
+        <a asp-page="/Index" data-turbo="false" class="@(ViewData["Menu"] == "home" ? "active" : "")">🏠 系统首页</a>
+        <a asp-page="/Admin/UserManage" data-turbo="false" class="@(ViewData["Menu"] == "user" ? "active" : "")">👤 用户管理</a>
+        <a asp-page="/Admin/FundManage" data-turbo="false" class="@(ViewData["Menu"] == "fund" ? "active" : "")">💰 资金流水</a>
+        <a asp-page="/Lotterys/LotteryConfig" data-turbo="false" class="@(ViewData["Menu"] == "lottery" ? "active" : "")">🎫 彩种管理</a>
+        <a asp-page="/Lotterys/BetRecordManage" data-turbo="false" class="@(ViewData["Menu"] == "bet" ? "active" : "")">📋 下注记录</a>
+        <a asp-page="/Admin/UsdtConfig" data-turbo="false" class="=@(ViewData["Menu"] == "usdt" ? "active" : "")">💰 USDT收款配置</a>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - LotteryAdminSystem - <a asp-area="" asp-page="/Privacy">Privacy</a>
+    <!-- 顶部导航 -->
+    <div class="top-nav d-flex justify-content-between">
+        <span>后台管理面板</span>
+        <div>
+            @if (!string.IsNullOrEmpty(loginName))
+            {
+                <span>欢迎，@loginName</span>
+                <form asp-page="/Admin/Login" asp-page-handler="Logout" method="post" class="d-inline ms-3">
+                    <button class="btn btn-sm btn-outline-light">退出登录</button>
+                </form>
+            }
         </div>
-    </footer>
+    </div>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <!-- 主内容区域 -->
+    <div class="main-content">
+        @RenderBody()
+    </div>
 
-    @await RenderSectionAsync("Scripts", required: false)
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

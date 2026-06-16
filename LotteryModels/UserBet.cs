@@ -1,6 +1,10 @@
-﻿namespace LotteryModels
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace LotteryModels
 {
     /// <summary>用户投注记录</summary>
+
+    [Table("UserBets")]
     public class UserBet
     {
         public int Id { get; set; }

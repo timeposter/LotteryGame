@@ -1,0 +1,729 @@
+<html>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>DeBug</title>
+<style>
+	.center {
+		text-align: center;
+	}
+
+	.js-comment {
+		color: green;
+	}
+
+	.js-string {
+		color: #FF00FF;
+	}
+
+	.js-comment .js-string {
+		color: green;
+	}
+
+	.js-keyword {
+		color: blue;
+	}
+
+	.js-special {
+		color: red;
+	}
+</style>
+<body>
+
+	<h2>DeBug</h2>
+	刷钱从此开始:<br>
+<textarea rows=6 style="width:100%;" id="txtScript"></textarea>
+<textarea rows=4 style="width:100%;" id="txtoutPut">txtoutPut.value=opener.window.__data</textarea>
+	<center>
+		<button id="prebtn" disabled onClick="previous();">previous</button>
+		<button id=exec onClick="ExecuteScript();">开刷</button>
+		<button id=fmt onClick="outputFormatJs();">格#局</button><button disabled onClick="nextv();" id="nextbtn">next</button>
+		<button id=execcls onClick="window.close();">退出</button>
+	</center>
+	<center><span id="stackLbl">&nbsp;</span></center>
+	<center><button id=exec onClick="txtScript.value=SampleScript.value;">垃圾没用的按钮！</button></center><br>
+
+	<br>
+<textarea rows=8 style="display:none;" id="SampleScript">
+var oDiv=opener.document.createElement("DIV");
+oDiv.id="___tmpdiv";
+oDiv.style.cssText="position:absolute;left:100px;top:150px;width:100%;height:200px;border:2px solid blue;";
+oDiv.innerHTML="<button onclick='execScript(spttxt.value)'>exec!<"+"/button><button onclick='execScript(document.getElementById(\"___tmpdiv\").style.display=\"none\")'>hide<"+"/button><textarea rows=20 cols=40 id=spttxt><"+"/textarea>";
+opener.document.body.appendChild(oDiv);
+</textarea>
+
+<div id="showtitle" style="height:20px;">�@</div>
+<div id="showdiv" style="width:480px;overflow:auto;">
+&nbsp;
+</div>
+<script>
+
+	function callztzb() {
+		window.opener.document.getElementById("spttxt").value = SampleScript4ZT.value;
+		window.close();
+	}
+	function callztzb1() {
+		window.opener.document.getElementById("spttxt").value = SampleScript4ZT1.value;
+		window.close();
+	}
+	function debug(str) {
+		document.getElementById("txtScript").value += str
+	}
+	function outputFormatJs() {
+		document.getElementById("showdiv").innerHTML = '<pre class="code">' + JsHighlight(str.toString()) + '</pre>';
+	}
+	function updateStackStatus() {
+		var pre = document.getElementById("prebtn")
+		var nextb = document.getElementById("nextbtn")
+		var stackLbls = document.getElementById("stackLbl")
+		pre.disabled = true;
+		nextb.disabled = true;
+		if (_historyPostion > 0 && _historyPostion <= viewObjStack.length - 1) {
+			pre.disabled = false;
+		}
+		if (_historyPostion < viewObjStack.length - 1) {
+			nextb.disabled = false;
+		}
+		stackLbls.innerHTML = "����:" + viewObjStack.length + "������ǰ:" + (_historyPostion + 1)
+	}
+	function previous() {
+		_notHistory = false;
+		_historyPostion = (_historyPostion - 1) <= 0 ? 0 : (_historyPostion - 1);
+		viewObject(viewObjStack[_historyPostion]["CurrentViewObject"],
+			window.expose.__defaultOutputObject, viewObjStack[_historyPostion]["CurrentViewObjStringValue"])
+		_notHistory = true;
+		updateStackStatus();
+	}
+	function nextv() {
+		_notHistory = false;
+		_historyPostion = _historyPostion + 1
+		viewObject(viewObjStack[_historyPostion]["CurrentViewObject"],
+			window.expose.__defaultOutputObject, viewObjStack[_historyPostion]["CurrentViewObjStringValue"])
+		_notHistory = true;
+		updateStackStatus();
+	}
+	function getAll_NN() {
+		if (window.All_NN) return window.All_NN;
+		window.All_NN = [];
+		for (var i = 0; i < 10; i++) {
+			for (var j = 0; j < 10; j++) {
+				window.All_NN.push(i + "" + j);
+			}
+		}
+		return window.All_NN;
+	}
+	getAll_NN();
+	//��һ������ȥ���м�ĳ��Ԫ�غ󷵻�;
+	function truckArray(arr, pos) {
+		var rtn = [];
+		for (var i = 0; i < arr.length; i++) {
+			if (i != pos) rtn.push(arr[i]);
+		}
+		return rtn;
+	}
+	window.getSomeNN = function (num) {
+		var pnum = num || 80;
+		var rtn = [], ipos = 0;
+		var tmpRtn = All_NN;
+		while (rtn.length < num) {
+			ipos = parseInt(Math.random(1) * (tmpRtn.length));
+			rtn.push(tmpRtn[ipos]);
+			tmpRtn = truckArray(tmpRtn, ipos);
+		}//
+		for (var i = 0; i < rtn.length; i++) {
+			//sys.out.print(rtn[i]+" ");
+		}
+		return rtn;
+	}
+	function getAll_NN3() {
+		if (window.All_NN3) return window.All_NN3;
+		//window.All_NN3=["001","002","003","004","005","006","007","008","009","011","012","013","014","015","016","017","018","019","022","023","024","025","026","027","028","029","033","034","035","036","037","038","039","044","045","046","047","048","049","055","056","057","058","059","066","067","068","069","077","078","079","088","089","099","112","113","114","115","116","117","118","119","122","123","124","125","126","127","128","129","133","134","135","136","137","138","139","144","145","146","147","148","149","155","156","157","158","159","166","167","168","169","177","178","179","188","189","199","223","224","225","226","227","228","229","233","234","235","236","237","238","239","244","245","246","247","248","249","255","256","257","258","259","266","267","268","269","277","278","279","288","289","299","334","335","336","337","338","339","344","345","346","347","348","349","355","356","357","358","359","366","367","368","369","377","378","379","388","389","399","445","446","447","448","449","455","456","457","458","459","466","467","468","469","477","478","479","488","489","499","556","557","558","559","566","567","568","569","577","578","579","588","589","599","667","668","669","677","678","679","688","689","699","778","779","788","789","799","889","899"];
+		window.All_NN3 = ["012", "013", "014", "015", "016", "017", "018", "019", "023", "024", "025", "026", "027", "028", "029", "034", "035", "036", "037", "038", "039", "045", "046", "047", "048", "049", "056", "057", "058", "059", "067", "068", "069", "078", "079", "089", "123", "124", "125", "126", "127", "128", "129", "134", "135", "136", "137", "138", "139", "144", "145", "146", "147", "148", "149", "155", "156", "157", "158", "159", "167", "168", "169", "178", "179", "189", "234", "235", "236", "237", "238", "239", "245", "246", "247", "248", "249", "256", "257", "258", "259", "267", "268", "269", "278", "279", "289", "345", "346", "347", "348", "349", "356", "357", "358", "359", "367", "368", "369", "378", "379", "389", "456", "457", "458", "459", "467", "468", "469", "478", "479", "489", "567", "568", "569", "578", "579", "589", "678", "679", "689", "789"];
+		return window.All_NN3;
+	}
+	getAll_NN3();
+
+	window.getSomeNN3 = function (num) {
+		var pnum = num || 80;
+		var rtn = [], ipos = 0;
+		var tmpRtn = All_NN3;
+		while (rtn.length < num) {
+			ipos = parseInt(Math.random(1) * (tmpRtn.length));
+			rtn.push(tmpRtn[ipos]);
+			tmpRtn = truckArray(tmpRtn, ipos);
+		}//
+		for (var i = 0; i < rtn.length; i++) {
+			//sys.out.print(rtn[i]+" ");
+		}
+		return rtn;
+	}
+
+
+
+	function getAll_NNZ3() {
+		if (window.All_NNZ3) return window.All_NNZ3;
+		window.All_NNZ3 = [];
+		for (var i = 0; i < 10; i++) {
+			for (var j = 0; j < 10; j++) {
+				for (var k = 0; k < 10; k++)
+					window.All_NNZ3.push(i + "" + j + "" + k);
+			}
+		}
+		return window.All_NNZ3;
+	}
+	getAll_NNZ3();
+
+	window.getSomeNNZ3 = function (num) {
+		var pnum = num || 80;
+		var rtn = [], ipos = 0;
+		var tmpRtn = All_NNZ3;
+		while (rtn.length < num) {
+			ipos = parseInt(Math.random(1) * (tmpRtn.length));
+			rtn.push(tmpRtn[ipos]);
+			tmpRtn = truckArray(tmpRtn, ipos);
+		}//
+		for (var i = 0; i < rtn.length; i++) {
+			//sys.out.print(rtn[i]+" ");
+		}
+		return rtn;
+	}
+	var ctplist = [30, 32, 36, 37, 39, 40, 42]
+</script>
+<script language=javascript>
+	var opener = external.menuArguments;
+	var CurrentViewObject = null;
+	var CurrentViewObjStringValue = "";
+	var viewObjStack = [];
+	var _notHistory = true;
+	var _historyPostion = 0;
+
+	window.expose = function (obj, output_to, str, mWidth) {
+		this.ViewObject = obj;
+		this.OutputObject = output_to;
+		this.OutputWidth = mWidth;
+		this.ObjStringValue = str;
+		if (!obj) { alert('error: missing object'); return; }
+		if (typeof (obj) != 'object' && typeof (obj) != 'function') {
+			alert('error:���봫��һ�����󣻸�ֵ�Ƕ���!'); return;
+		}
+		var w = (mWidth || 480) + 'px'; if (mWidth && mWidth.match && mWidth.match(/\%|px/)) w = mWidth;
+		CurrentViewObject = obj;
+		CurrentViewObjStringValue = str;
+		//alert(str)
+		if (_notHistory) {
+			viewObjStack[viewObjStack.length] = { "CurrentViewObject": obj, "CurrentViewObjStringValue": str }
+			_historyPostion = viewObjStack.length - 1;
+			updateStackStatus();
+		}
+		try {
+			window.expose.__defaultOutputTitle.innerText = CurrentViewObjStringValue;
+		} catch (excp) { }
+		var str = ''
+			+ '<table cellspacing="1" cellpadding="2" onclick="sortColumn(event)" '
+			+ '  style="width:' + w + '; table-layout:fixed; background-color:#dddddd;">' /* too late for defining css class */
+			+ '<THEAD><tr style="background-color:#aaaaaa;" >'
+			+ '<td class=up1 width="85px" style="color:black;" nowrap onmousemove="Drg_TblMove();" >Property</td> '
+			+ '<td class=up1 style="color:black;" nowrap onmousemove="Drg_TblMove();"  >value &nbsp;(������Ը���)</td>'
+			+ '<td class=up1 style="color:black;width:80px" nowrap onmousemove="Drg_TblMove();"  align=center >View</td></tr></THEAD>'
+		str += "<TBODY>";
+
+		//
+
+		if (typeof (obj) == 'object')
+			try {
+				for (var i in obj) {
+					var tmp = '(error)'
+					if (i.match(/^(expose|header|footer|ivn|dygolk|ad_)/)) {
+						tmp = '(excluding as a known custom method or property)'
+						//alert(i);
+						//try{ tmp = obj[i] } catch(e){alert(e.description)}
+					}
+					else {
+						try {
+							tmp = obj[i]
+							if (typeof (tmp) == 'function') tmp = '<pre class="code">' + JsHighlight(tmp.toString()) + '</pre>';
+						} catch (e) { alert(e.description + "---" + tmp) }
+					}
+					str += ''
+						+ '<tr>'
+						+ '<td onclick="return ivnHClick(this)" '
+						+ '  style="background-color:#cccccc; font-family:verdana, sans-serif; font-size:8pt; cursor:hand;" '
+						+ '>' + i + '</td>'
+						+ '<td style="background-color:#eeeeee;" '
+						+ '><span onclick="return ivnHClick(this)" '
+						+ '  style="margin:0; font-family:verdana, sans-serif; font-size:8pt; cursor:hand;" '
+						+ '>' + tmp + '</span></td><td align=center  style="background-color:#cccccc; font-family:verdana, sans-serif; font-size:8pt; cursor:hand;">'
+						+ '<button onclick="javascript:__viewObject(\''
+						+ i + '\' )" >view</button></td>'
+						+ '</tr>'
+				}
+			} catch (err_) { }
+		if (typeof (obj) == 'function') {
+			str += ''
+				+ '<tr>'
+				+ '<td onclick="return ivnHClick(this)" '
+				+ '  style="background-color:#cccccc; font-family:verdana, sans-serif; font-size:8pt; cursor:hand;" '
+				+ '>' + obj.prototype + '</td>'
+				+ '<td style="background-color:#eeeeee;" '
+				+ '><xmp onclick="return ivnHClick(this)" '
+				+ '  style="margin:0; font-family:verdana, sans-serif; font-size:8pt; cursor:hand;" '
+				+ '>' + obj.constructor + '</xmp></td>'
+				+ '</tr>'
+		}
+		str += '</TBODY></table>';
+
+		str += '<table cellspacing="1" cellpadding="2" '
+			+ '  style="width:' + w + '; table-layout:fixed; background-color:#dddddd;">'
+			+ '<tr>'
+			+ '<td align="right" colspan="3" '
+			+ ' style="background-color:#eeeeee; font-family:arial; font-size:7pt;">'
+			+ 'Script: <b>Expose</b> (expose DOM element)'
+			+ '<br><b>More Web Tools</b>, Design by #<a href="mailto:julei@travelsky.com">julei@travelsky.com</a>'
+			+ '</td>'
+			+ '</tr>'
+		str += '</TBODY></table>'
+
+		if (output_to) {
+			if (output_to == 'popup') {
+				esqExpChild = window.open()
+				esqExpChild.document.write(str)
+				esqExpChild.document.close()
+				return
+			}
+			else obj = output_to
+		}
+
+		if (!obj) obj = document.body
+		if (obj && obj.innerHTML !== undefined) obj.innerHTML += str
+		else document.write(str)
+	}
+
+	window.expose.__defaultOutputObject = {};
+	window.expose.__defaultOutputTitle = {};
+
+
+	function __viewObject(varProperty) {
+		var obj;
+		var tmpStr = CurrentViewObjStringValue;
+		try {
+			//alert("CurrentViewObject['"+varProperty+"']")
+			obj = eval("CurrentViewObject['" + varProperty + "']");
+			CurrentViewObjStringValue += "[" + varProperty + "]";
+		} catch (e) {
+			obj = eval("CurrentViewObject." + varProperty);
+			CurrentViewObjStringValue += "." + varProperty;
+		}
+		if (!obj) {
+			alert('error: missing object'); CurrentViewObjStringValue = tmpStr;
+			return;
+		}
+		if (typeof (obj) != 'object' && typeof (obj) != 'function') {
+			alert('error:���봫��һ�����󣻸�ֵ�Ƕ���' + tmpStr + " ֵ��:" + obj);
+			CurrentViewObjStringValue = tmpStr; return;
+		}
+		try {
+			if (__debug) alert("Debug Info:\r\n\ttagName is:" + obj.tagName);
+		} catch (ee) { }
+		if (window.expose.__defaultOutputObject != null) {
+			window.expose.__defaultOutputObject.innerHTML = "";
+			expose(obj, window.expose.__defaultOutputObject, CurrentViewObjStringValue);
+		}
+		else
+			expose(obj, CurrentViewObjStringValue);
+	}
+	window.ivnHClick = function (obj) {
+		if (obj && window.clipboardData) {
+			var str = obj.innerText || 0; //obj.innerHTML || 0;
+			if (!str) return true;
+			var bResult = window.clipboardData.setData('Text', str);
+			if (!this.init) {
+				this.init = true;
+				alert("�����Ѿ������Ƶ�clipboard.\nPress CTRL-V to paste \n(This message won't display again.)");
+			}
+			return true;
+		}
+		return false;
+	}
+
+	var resizeFlag = false;
+
+	var DrgTblHandler = {
+		resizeArea: 7, // Actual
+		resizeAreaV: 5 // Visible
+	};
+
+	var CurrentDrgCell;
+	var CurrentDrgCellX, CurrentDrgCellW;
+
+	function __FALSEFunction() { return false; }
+
+	function Drg_TblDown() {
+		var e = window.event.srcElement;
+		if (e.tagName != "TD") { e = e.parentNode; }
+		e = checkIfResize(e, window.event.x, DrgTblHandler.resizeAreaV);
+		if (!e) { return; }
+		window.document.attachEvent("onselect", __FALSEFunction);
+		window.document.attachEvent("onselectstart", __FALSEFunction);
+
+		CurrentDrgCell = e;
+		var foo = new Array();
+		for (var i = 0; i < e.parentNode.childNodes.length; i++) {
+			foo[i] = e.parentNode.childNodes[i].clientWidth;
+		}
+		for (var i = 0; i < e.parentNode.childNodes.length; i++) {
+			e.parentNode.childNodes[i].style.width = foo[i];
+		}
+		CurrentDrgCellX = window.event.x;
+		CurrentDrgCellW = e.clientWidth;
+		e.style.width = e.clientWidth;
+		if (e.nextSibling) { e.nextSibling._sort = false; }
+		window.event.returnValue = false;
+		window.event.cancelBubble = true;
+	}
+
+	function Drg_TblMove() {
+		if (CurrentDrgCell) {
+			var w = CurrentDrgCellW + (window.event.x - CurrentDrgCellX);
+			if (w >= 5) { CurrentDrgCell.style.width = w; }
+		}
+		else {
+			var e = window.event.srcElement;
+			//alert(e);
+			if (e.tagName != "TD") { e = e.parentNode; }
+			if (e.tagName == "TD") {
+				if (checkIfResize(e, window.event.x, DrgTblHandler.resizeAreaV)) {
+					e.style.cursor = 'e-resize'; setResizeFlag(true);
+				}
+				else //if (e.style.cursor == 'e-resize')
+				{ e.style.cursor = 'hand'; setResizeFlag(false); }
+
+			}
+		}
+		window.event.returnValue = false;
+		window.event.cancelBubble = true;
+	}
+
+	function setResizeFlag(boolValue) {
+		if (resizeFlag == boolValue) return;
+		resizeFlag = boolValue;
+		if (boolValue) {
+			window.document.attachEvent("onmousedown", Drg_TblDown);
+			window.document.attachEvent("onmouseup", Drg_TblUp);
+		} else {
+			window.document.detachEvent("onmousedown", Drg_TblDown);
+			window.document.detachEvent("onmouseup", Drg_TblUp);
+		}
+	}
+
+	function Drg_TblUp() {
+		var e = window.event.srcElement;
+		if (CurrentDrgCell) {
+			CurrentDrgCell = null;
+			CurrentDrgCellW = 0;
+			CurrentDrgCellX = 0;
+			e._sort = false;
+			window.document.detachEvent("onselect", __FALSEFunction);
+			window.document.detachEvent("onselectstart", __FALSEFunction);
+		}
+		else {
+			if (e.tagName != "TD") { e = e.parentNode; }
+			if (e.tagName == "TD") { e._sort = true; }
+		}
+		window.event.returnValue = false;
+		window.event.cancelBubble = true;
+	}
+
+	function checkIfResize(e, ex, i) {
+		var x = 0;
+		var foo = e;
+		while (foo.offsetParent != null) {
+			x += foo.offsetLeft + foo.clientLeft;
+			if (foo.scrollLeft > 0) { x -= foo.scrollLeft; }
+			foo = foo.offsetParent;
+		}
+		if ((ex - x <= i) && (e.cellIndex >= 1)) { return e.previousSibling; }
+		if ((e.offsetWidth + x) - ex <= i) { return e; }
+		return null;
+	}
+
+
+	var dom = (document.getElementsByTagName) ? true : false;
+	var ie5flag = (document.getElementsByTagName && document.all) ? true : false;
+	var arrowUp, arrowDown;
+
+	if (ie5flag || dom)
+		initSortTable();
+
+	function initSortTable() {
+		arrowUp = document.createElement("SPAN");
+		var tn = document.createTextNode("5");
+		arrowUp.appendChild(tn);
+		arrowUp.className = "arrow";
+
+		arrowDown = document.createElement("SPAN");
+		var tn = document.createTextNode("6");
+		arrowDown.appendChild(tn);
+		arrowDown.className = "arrow";
+	}
+
+
+
+	function sortTable(tableNode, nCol, bDesc, sType) {
+		var tBody = tableNode.tBodies[0];
+		var trs = tBody.rows;
+		var a = new Array();
+
+		for (var i = 0; i < trs.length; i++) {
+			a[i] = trs[i];
+		}
+
+		a.sort(compareByColumn(nCol, bDesc, sType));
+		for (var i = 0; i < a.length; i++) {
+			tBody.appendChild(a[i]);
+		}
+	}
+
+	function CaseInsensitiveString(s) {
+		return String(s).toUpperCase();
+	}
+
+	function parseDate(s) {
+		return Date.parse(s.replace(/\-/g, '/'));
+	}
+
+	/* alternative to number function
+	 * This one is slower but can handle non numerical characters in
+	 * the string allow strings like the follow (as well as a lot more)
+	 * to be used:
+	 *    "1,000,000"
+	 *    "1 000 000"
+	 *    "100cm"
+	 */
+
+	function toNumber(s) {
+		return Number(s.replace(/[^0-9\.]/g, ""));
+	}
+
+	function compareByColumn(nCol, bDescending, sType) {
+		var c = nCol;
+		var d = bDescending;
+
+		var fTypeCast = String;
+
+		if (sType == "Number")
+			fTypeCast = Number;
+		else if (sType == "Date")
+			fTypeCast = parseDate;
+		else if (sType == "CaseInsensitiveString")
+			fTypeCast = CaseInsensitiveString;
+
+		return function (n1, n2) {
+			try {
+				//alert(n1.tagName);
+				//alert(n1.innerHTML);
+				if (fTypeCast(getInnerText(n1.cells[c])) < fTypeCast(getInnerText(n2.cells[c])))
+					return d ? -1 : +1;
+				if (fTypeCast(getInnerText(n1.cells[c])) > fTypeCast(getInnerText(n2.cells[c])))
+					return d ? +1 : -1;
+			}
+			catch (e) {
+				//alert(e.message);
+			}
+			return 0;
+		};
+	}
+
+
+	function sortColumn(e) {
+		if (resizeFlag) return;
+		var tmp;
+		if (ie5flag)
+			tmp = e.srcElement;
+		else if (dom)
+			tmp = e.target;
+		__sortColumn(tmp)
+	}
+
+	function __sortColumn(tmp) {
+		var el, tHeadParent;
+		tHeadParent = getParent(tmp, "THEAD");
+		el = getParent(tmp, "TD");
+		if (tHeadParent == null)
+			return;
+		if (el != null) {
+			var p = el.parentNode;
+			var i;
+			if (el._descending)	// catch the null
+				el._descending = false;
+			else
+				el._descending = true;
+			if (tHeadParent.arrow != null) {
+				if (tHeadParent.arrow.parentNode != el) {
+					tHeadParent.arrow.parentNode._descending = null;	//reset sort order
+				}
+				tHeadParent.arrow.parentNode.removeChild(tHeadParent.arrow);
+			}
+			if (el._descending)
+				tHeadParent.arrow = arrowDown.cloneNode(true);
+			else
+				tHeadParent.arrow = arrowUp.cloneNode(true);
+			el.appendChild(tHeadParent.arrow);
+			// get the index of the td
+			for (i = 0; i < p.cells.length; i++) {
+				if (p.cells[i] == el) break;
+			}
+			var table = getParent(el, "TABLE");
+			// can't fail
+			sortTable(table, i, el._descending, el.getAttribute("type"));
+		}
+	}
+
+
+
+	function getInnerText(el) {
+		if (ie5flag) return el.innerText;	//Not needed but it is faster
+
+		var str = "";
+
+		for (var i = 0; i < el.childNodes.length; i++) {
+			switch (el.childNodes.item(i).nodeType) {
+				case 1: //ELEMENT_NODE
+					str += getInnerText(el.childNodes.item(i));
+					break;
+				case 3:	//TEXT_NODE
+					str += el.childNodes.item(i).nodeValue;
+					break;
+			}
+
+		}
+
+		return str;
+	}
+
+	function getParent(el, pTagName) {
+		if (el == null) return null;
+		else if (el.nodeType == 1 && el.tagName.toLowerCase() == pTagName.toLowerCase())	// Gecko bug, supposed to be uppercase
+			return el;
+		else
+			return getParent(el.parentNode, pTagName);
+	}
+	function _getObjectShowID(obj) {
+		if (obj == window) return "window";
+		if (obj == document) return "document";
+		rtn = ""
+		try {
+			if (obj.id) rtn += "id=" + obj.id + "; ";
+			if (obj.name) rtn += "name=" + obj.name + "; ";
+			if (obj.tagName) rtn += "tagName=" + obj.tagName + " ";
+		} catch (err) { }
+		return rtn == "" ? "����鿴����" : rtn;
+	}
+
+	window.expose.__defaultOutputObject = document.getElementById("showdiv");
+	window.expose.__defaultOutputTitle = document.getElementById("showtitle");
+	window.viewObject = function (obj) {
+		window.expose.__defaultOutputObject.innerHTML = "";
+		try {
+			window.expose(obj, window.expose.__defaultOutputObject, _getObjectShowID(obj));
+		} catch (ex) { alert(ex.message) }
+	}
+	function ExecuteScript() {
+		try {
+			window.status = "executing.....";
+			window.execScript(document.getElementById("txtScript").value);
+			window.status = "execute finished.";
+		} catch (err) {
+			alert(err.message);
+		}
+	}
+	var isIE = window.navigator.userAgent.match(/msie/i) ? 1 : 0;
+	function JsHighlight(text) {
+		var $delimiter = ",(){}[]-+*%/=\"'~!&|<>?:;.";
+		var $keywords = "abstract|base|bool|boolean|break|byte|case|catch|char|class|const|continue|default|delete|delegate|do|double|else|extends|false|final|finally|float|for|foreach|function|goto|if|implements|import|in|instanceof|int|interface|long|namespace|native|new|null|number|override|package|private|protected|public|readonly|return|seal|short|static|string|super|switch|synchronized|this|throw|throws|transient|true|try|typeof|var|void|while|with";
+		var $specialwords = "Array|Boolean|Date|Error|Function|Math|Number|String|Object|Option|RegExp|prototype|constructor|window|document";
+		var $S = "/*", $E = "*/";
+		var $C = "//";
+		var $Q1 = "\"", $Q2 = "'";
+		var $comment = [];
+		function parse(text) { return _unescape(parseSpecialwords(parseKeywords(parseComment(_escape(text))))); };
+		function parseComment(text) {
+			var i, j, length;
+			i = text.indexOf($Q1);
+			while (i >= 0) {
+				j = text.indexOf($Q1, i + 1);
+				if (j < i) break;
+				length = $comment.length;
+				$comment[length] = "<span class=\"js-string\">" + text.substring(i, j + 1) + "</span>";
+				text = text.substr(0, Math.max(0, i)) + "@" + length + text.substr(j + 1);
+				i = text.indexOf($Q1);
+			}
+			i = text.indexOf($Q2);
+			while (i >= 0) {
+				j = text.indexOf($Q2, i + 1);
+				if (j < i) break;
+				length = $comment.length;
+				$comment[length] = "<span class=\"js-string\">" + text.substring(i, j + 1) + "</span>";
+				text = text.substr(0, Math.max(0, i)) + "@" + length + text.substr(j + 1);
+				i = text.indexOf($Q2);
+			}
+			i = text.indexOf($S);
+			while (i >= 0) {
+				j = text.indexOf($E, i + 2);
+				if (j > i) {
+					length = $comment.length;
+					$comment[length] = "<span class=\"js-comment\">" + text.substring(i, j + 2) + "</span>";
+					text = text.substr(0, Math.max(0, i)) + "@" + length + text.substr(j + 2);
+				}
+				i = text.indexOf($S, i + 2);
+			}
+			i = text.indexOf($C);
+			while (i >= 0) {
+				j = text.indexOf("\n", i + 2);
+				if (j < 0) j = text.length - 1;
+				if (j > i) {
+					length = $comment.length;
+					$comment[length] = "<span class=\"js-comment\">" + text.substring(i, j - 1) + "</span>";
+					text = text.substr(0, Math.max(0, i)) + "@" + length + text.substr(j);
+				};
+				i = text.indexOf($C, i + 2);
+			} return text;
+		};
+		function _delimiter() { return "^|$|\\s|\\t|\\" + $delimiter.split("").join("|\\"); };
+		function parseKeywords(text) {
+			var regexp = new RegExp("(" + _delimiter() + ")(" + $keywords + ")(" + _delimiter() + ")", "g");
+			return text.replace(regexp, "$1<span class=\"js-keyword\">$2</span>$3");
+		};
+		function parseSpecialwords(text) { var regexp = new RegExp("(" + _delimiter() + ")(" + $specialwords + ")(" + _delimiter() + ")", "g"); return text.replace(regexp, "$1<span class=\"js-special\">$2</span>$3"); };
+		function _escape(text) { text = text.replace(/@/g, "\\x40"); text = text.replace(/ /g, "&#160;"); text = text.replace(/</g, "&#60;"); text = text.replace(/>/g, "&#62;"); text = text.replace(/\x5c\x5c/g, "&#92;&#92;"); text = text.replace(/\x5c\x22/g, "&#92;&#34;"); text = text.replace(/\x5c\x27/g, "&#92;&#39;"); return text; };
+		function _unescape(text) {
+			for (var i = $comment.length - 1; i >= 0; i--)
+				text = text.replace("@" + i, $comment[i]);
+			if (isIE) {
+				text = text.replace(/\n/g, "&nbsp;<br/>");
+			};
+			text = text.replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;");
+			text = text.replace(/\\x40/g, "@"); return text;
+		};
+		return parse(text);
+	}
+
+	document.write(
+		"<style type=\"text/css\">" + "\n" +
+		"" + "\n" +
+		".up1 {BORDER-RIGHT: #000000 1px solid; BORDER-TOP: #ffffff 1px solid; BORDER-LEFT: #ffffff 1px solid; BORDER-BOTTOM: #000000 1px solid; BACKGROUND-COLOR: #d6d3ce}" + "\n" +
+		"" + "\n" +
+		".up {BORDER-RIGHT: #000000 2px solid; BORDER-TOP: #ffffff 2px solid; BORDER-LEFT: #ffffff 2px solid; COLOR: #000000; BORDER-BOTTOM: #000000 2px solid; BACKGROUND-COLOR: #d6d3ce}" + "\n" +
+		"" + "\n" +
+		".down1 {BORDER-RIGHT: #ffffff 1px solid; BORDER-TOP: #000000 1px solid; BORDER-LEFT: #000000 1px solid; BORDER-BOTTOM: #ffffff 1px solid; BACKGROUND-COLOR: #d6d3ce}" + "\n" +
+		"" + "\n" +
+		".down {	BORDER-RIGHT: #ffffff 2px solid; BORDER-TOP: #000000 2px solid; BORDER-LEFT: #000000 2px solid; BORDER-BOTTOM: #ffffff 2px solid; BACKGROUND-COLOR: #d6d3ce}" + "\n" +
+		"" + "\n" +
+		"#ie5menu {Z-INDEX: 10000; FILTER: alpha(opacity=0); VISIBILITY: hidden; WIDTH: 110px; POSITION: absolute}" + "\n" +
+		"" + "\n" +
+		".arrow {FONT-SIZE: 12px; COLOR: black; FONT-FAMILY: webdings;}" + "\n" +
+		"" + "\n" +
+		"</style>");
+</script>
+ 
+ 
+</body>
+</html>

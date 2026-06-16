@@ -1,0 +1,164 @@
+﻿@page "/Admin/UsdtConfig"
+@model LotteryAdminSystem.Pages.Admin.UsdtConfigModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "USDT收款配置";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>💰 USDT收款账户配置</h3>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal" onclick="resetForm()">新增收款账户</button>
+    </div>
+
+    <!-- 新增/编辑弹窗 -->
+    <div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">USDT账户编辑</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" asp-page-handler="Save">
+                    <div class="modal-body">
+                        <input type="hidden" name="id" id="hidId" value="0" />
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label">账户名称</label>
+                            <div class="col-sm-10">
+                                <input class="form-control" id="txtName" name="accountName" required placeholder="例如：官方收款1号">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label">USDT地址</label>
+                            <div class="col-sm-10">
+                                <input class="form-control" id="txtAddress" name="usdtAddress" required placeholder="输入完整钱包地址">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label">链类型</label>
+                            <div class="col-sm-10">
+                                <select class="form-select" name="chainType" id="selChain">
+                                    <option value="TRC20">TRC20</option>
+                                    <option value="ERC20">ERC20</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label">排序</label>
+                            <div class="col-sm-10">
+                                <input class="form-control" id="txtSort" name="sort" type="number" value="0">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label">状态</label>
+                            <div class="col-sm-10">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="isEnable" id="chkEnable" checked>
+                                    <label class="form-check-label">启用该收款账户</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label">备注说明</label>
+                            <div class="col-sm-10">
+                                <textarea class="form-control" id="txtRemark" name="remark" rows="3" placeholder="填写充值提示、注意事项"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存配置</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 数据表格 -->
+    <table class="table table-bordered table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>账户名称</th>
+                <th>USDT地址</th>
+                <th>链类型</th>
+                <th>排序</th>
+                <th>状态</th>
+                <th>备注</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.UsdtList)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.AccountName</td>
+                    <td style="max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="@item.UsdtAddress">@item.UsdtAddress</td>
+                    <td>@item.ChainType</td>
+                    <td>@item.Sort</td>
+                    <td>
+                        @if (item.IsEnable)
+                        {
+                            <span class="text-success">✅ 启用</span>
+                        }
+                        else
+                        {
+                            <span class="text-danger">❌ 禁用</span>
+                        }
+                    </td>
+                    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="@item.Remark">@item.Remark</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="editData(@item.Id, '@item.AccountName', '@item.UsdtAddress', '@item.ChainType', @item.Sort, @(item.IsEnable ? "true" : "false"), '@item.Remark')">编辑</button>
+
+                        <form method="post" asp-page-handler="ToggleEnable" class="d-inline">
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <button class="btn btn-sm btn-secondary">
+                                @(item.IsEnable ? "禁用" : "启用")
+                            </button>
+                        </form>
+
+                        <form method="post" asp-page-handler="Delete" class="d-inline">
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <button class="btn btn-sm btn-danger" onclick="return confirm('确定删除该收款账户？')">删除</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            @if (!Model.UsdtList.Any())
+            {
+                <tr>
+                    <td colspan="8" class="text-center text-muted">暂无收款账户配置，请点击新增</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        // 重置弹窗表单
+        function resetForm() {
+            document.getElementById("hidId").value = "0";
+            document.getElementById("txtName").value = "";
+            document.getElementById("txtAddress").value = "";
+            document.getElementById("selChain").value = "TRC20";
+            document.getElementById("txtSort").value = "0";
+            document.getElementById("chkEnable").checked = true;
+            document.getElementById("txtRemark").value = "";
+        }
+
+        // 编辑回填数据
+        function editData(id, name, address, chain, sort, enable, remark) {
+            document.getElementById("hidId").value = id;
+            document.getElementById("txtName").value = name;
+            document.getElementById("txtAddress").value = address;
+            document.getElementById("selChain").value = chain;
+            document.getElementById("txtSort").value = sort;
+            document.getElementById("chkEnable").checked = enable === "true";
+            document.getElementById("txtRemark").value = remark;
+            var modal = new bootstrap.Modal(document.getElementById("addModal"));
+            modal.show();
+        }
+    </script>
+}

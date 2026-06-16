@@ -1,8 +1,13 @@
 ﻿@page
-@model Pages.User.IndexModel
+@model Pages.Users.IndexModel
+@using Microsoft.AspNetCore.Http
 @{
     ViewData["Title"] = "用户管理";
-    var adminName = Context.Session.GetString("AdminName");
+    var adminName = HttpContext?.Session?.GetString("AdminName");
+    // 修复：Context 未定义，使用 HttpContext 代替
+    // var adminName = Context.Session.GetString("AdminName");
+    // 正确写法如下：
+    // var adminName = HttpContext.Session.GetString("AdminName");
 }
 
 <div class="container mt-4">

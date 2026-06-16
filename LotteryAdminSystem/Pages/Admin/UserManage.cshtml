@@ -1,0 +1,40 @@
+﻿@page
+@model UserManageModel
+@{
+    Layout = "_Layout";
+    ViewData["Menu"] = "user";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>会员用户管理</h4>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">新增会员</button>
+</div>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>用户名</th>
+            <th>真实姓名</th>
+            <th>余额</th>
+            <th>QQ</th>
+            <th>注册时间</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var u in Model.UserList)
+        {
+            <tr>
+                <td>@u.Id</td>
+                <td>@u.Username</td>
+                <td>@(u.RealName ?? "-")</td>
+                <td>@u.Balance.ToString("F2")</td>
+                <td>@(u.QQ ?? "-")</td>
+                <td>@u.CreateTime</td>
+                <td>
+                    <button class="btn btn-sm btn-warning">编辑</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

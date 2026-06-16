@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
-namespace LotteryPlay.Pages.Lotterys
+namespace LotteryAdminSystem.Pages.Lotterys
 {
     public class LotteryConfigModel : PageModel
     {

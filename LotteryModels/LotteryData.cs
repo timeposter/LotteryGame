@@ -1,5 +1,7 @@
 ﻿
 
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace LotteryModels
 {
     /// <summary>开奖期号数据</summary>
@@ -25,5 +27,10 @@ namespace LotteryModels
         /// <summary>0=待开奖 1=已开奖</summary>
         public int IsOpen { get; set; } = 0;
         public DateTime? CreateTime { get; set; }
+        #region 导航关联（EF联表查询必备）
+        /// <summary>所属彩种实体</summary>
+        [ForeignKey(nameof(LotteryId))]
+        public Lottery Lottery { get; set; } = null!;
+        #endregion
     }
 }

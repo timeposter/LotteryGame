@@ -2,7 +2,7 @@
 
 namespace LotteryModels
 {
-    public class Admin
+    public class Admins
     {
         public int Id { get; set; }
 

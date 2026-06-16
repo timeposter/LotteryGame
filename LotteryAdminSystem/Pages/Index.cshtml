@@ -1,10 +1,54 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    Layout = "_Layout";
+    ViewData["MenuKey"] = "home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container-fluid">
+    <h3 class="mb-4">系统总览仪表盘</h3>
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="card text-bg-primary h-100">
+                <div class="card-body">
+                    <h5>注册总用户</h5>
+                    <h2>@Model.TotalUserCount</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-success h-100">
+                <div class="card-body">
+                    <h5>启用彩种数量</h5>
+                    <h2>@Model.EnabledLotteryCount</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-warning h-100">
+                <div class="card-body">
+                    <h5>今日下注总笔数</h5>
+                    <h2>@Model.TodayBetCount</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-bg-danger h-100">
+                <div class="card-body">
+                    <h5>平台总流水</h5>
+                    <h2>@Model.TotalAmount.ToString("F2")</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5">
+        <h4>快捷操作</h4>
+        <div class="d-flex gap-3 mt-3">
+            <a asp-page="/Admin/UserManage" class="btn btn-lg btn-outline-primary">用户管理</a>
+            <a asp-page="/Admin/FundManage" class="btn btn-lg btn-outline-success">资金管理</a>
+            <a asp-page="/Admin/LotteryTypeManage" class="btn btn-lg btn-outline-warning">彩种配置</a>
+            <a asp-page="/Admin/BetRecordManage" class="btn btn-lg btn-outline-secondary">下注记录查询</a>
+        </div>
+    </div>
 </div>

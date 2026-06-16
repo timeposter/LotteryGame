@@ -1,73 +1,143 @@
 ﻿@page
-@model LotteryAdminSystem.Pages.Lotterys.LotteryConfigModel 
+@model LotteryAdminSystem.Pages.Lotterys.LotteryConfigModel
 @{
-    Layout = null;
+    Layout = "_Layout";
+    ViewData["Menu"] = "lottery";
     ViewData["Title"] = "彩种玩法配置";
 }
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8" />
-    <title>彩种玩法后台配置</title>
-    <style>
-        table { border-collapse: collapse; width: 80%; margin:20px auto; }
-        th,td { border:1px solid #ccc; padding:8px; text-align:center; }
-        th { background:#f5f5f5; }
-        .box { width:80%; margin:20px auto; }
-        input { padding:4px; }
-        button { padding:5px 10px; cursor:pointer; }
-    </style>
-</head>
-<body>
-    <div class="box">
-        <h2>一、彩种管理</h2>
-        <form method="post">
-            <input type="hidden" name="id" value="0" />
-            名称：<input name="name" placeholder="彩种名称" />
-            排序：<input name="sort" value="0" />
-            <label><input type="checkbox" name="enable" checked />启用</label>
-            <button type="submit" formaction="?handler=SaveLottery">新增/保存</button>
-        </form>
 
-        <table>
+<div class="container-fluid mt-4">
+    <h3 class="mb-4">🎫 彩种玩法配置管理</h3>
+
+    <!-- 彩种新增/编辑弹窗 -->
+    <div class="modal fade" id="lotteryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">彩种编辑</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post" asp-page-handler="SaveLottery">
+                    <div class="modal-body">
+                        <input type="hidden" name="id" id="lotteryIdInput" value="0" />
+                        <div class="mb-3">
+                            <label class="form-label">彩种名称</label>
+                            <input name="name" id="lotteryNameInput" class="form-control" placeholder="请输入彩种名称" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">排序序号</label>
+                            <input name="sort" id="lotterySortInput" class="form-control" value="0" type="number">
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="enable" id="lotteryEnableCheck" checked>
+                            <label class="form-check-label">启用该彩种</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 彩种操作区域 -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5>一、彩种基础管理</h5>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#lotteryModal" onclick="resetLotteryForm()">新增彩种</button>
+    </div>
+
+    <table class="table table-bordered table-striped table-hover">
+        <thead class="table-dark">
             <tr>
                 <th>ID</th>
-                <th>名称</th>
+                <th>彩种名称</th>
                 <th>排序</th>
                 <th>状态</th>
                 <th>操作</th>
             </tr>
+        </thead>
+        <tbody>
             @foreach (var item in Model.LotteryList)
             {
                 <tr>
                     <td>@item.Id</td>
                     <td>@item.LotteryName</td>
                     <td>@item.Sort</td>
-                    <td>@(item.IsEnable ? "启用" : "禁用")</td>
                     <td>
-                        <form method="post" style="display:inline">
+                        @if (item.IsEnable)
+                        {
+                            <span class="text-success">✅ 启用</span>
+                        }
+                        else
+                        {
+                            <span class="text-danger">❌ 禁用</span>
+                        }
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="editLottery(@item.Id, '@item.LotteryName', @item.Sort, @(item.IsEnable ? "true" : "false"))">编辑</button>
+                        <form method="post" asp-page-handler="DelLottery" class="d-inline">
                             <input type="hidden" name="id" value="@item.Id" />
-                            <button formaction="?handler=DelLottery" onclick="return confirm('确定删除？')">删除</button>
+                            <button class="btn btn-sm btn-danger" onclick="return confirm('确定要删除该彩种？关联玩法会一并失效！')">删除</button>
                         </form>
                     </td>
                 </tr>
             }
-        </table>
+        </tbody>
+    </table>
+
+    <hr class="my-5">
+
+    <!-- 玩法新增/编辑弹窗 -->
+    <div class="modal fade" id="playModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">玩法编辑</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="post" asp-page-handler="SavePlay">
+                    <div class="modal-body">
+                        <input type="hidden" name="id" id="playIdInput" value="0" />
+                        <div class="mb-3">
+                            <label class="form-label">所属彩种ID</label>
+                            <input name="lotteryId" id="playLotteryIdInput" class="form-control" value="1" type="number" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">玩法名称</label>
+                            <input name="playName" id="playNameInput" class="form-control" placeholder="请输入玩法名称" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">奖金金额</label>
+                            <input name="bonus" id="playBonusInput" class="form-control" value="0" type="decimal">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">排序序号</label>
+                            <input name="sort" id="playSortInput" class="form-control" value="0" type="number">
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="enable" id="playEnableCheck" checked>
+                            <label class="form-check-label">启用该玩法</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
-    <div class="box">
-        <h2>二、玩法管理</h2>
-        <form method="post">
-            <input type="hidden" name="id" value="0" />
-            彩种ID：<input name="lotteryId" value="1" />
-            玩法名称：<input name="playName" />
-            奖金：<input name="bonus" value="0" />
-            排序：<input name="sort" value="0" />
-            <label><input type="checkbox" name="enable" checked />启用</label>
-            <button type="submit" formaction="?handler=SavePlay">新增/保存</button>
-        </form>
+    <!-- 玩法操作区域 -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5>二、玩法配置管理</h5>
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#playModal" onclick="resetPlayForm()">新增玩法</button>
+    </div>
 
-        <table>
+    <table class="table table-bordered table-striped table-hover">
+        <thead class="table-dark">
             <tr>
                 <th>ID</th>
                 <th>所属彩种</th>
@@ -77,24 +147,77 @@
                 <th>状态</th>
                 <th>操作</th>
             </tr>
+        </thead>
+        <tbody>
             @foreach (var item in Model.PlayList)
             {
                 <tr>
                     <td>@item.Id</td>
                     <td>@item.Lottery.LotteryName</td>
                     <td>@item.PlayName</td>
-                    <td>@item.BonusAmount</td>
+                    <td>@item.BonusAmount.ToString("F2")</td>
                     <td>@item.Sort</td>
-                    <td>@(item.IsEnable ? "启用" : "禁用")</td>
                     <td>
-                        <form method="post" style="display:inline">
+                        @if (item.IsEnable)
+                        {
+                            <span class="text-success">✅ 启用</span>
+                        }
+                        else
+                        {
+                            <span class="text-danger">❌ 禁用</span>
+                        }
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="editPlay(@item.Id, @item.LotteryId, '@item.PlayName', @item.BonusAmount, @item.Sort, @(item.IsEnable ? "true" : "false"))">编辑</button>
+                        <form method="post" asp-page-handler="DelPlay" class="d-inline">
                             <input type="hidden" name="id" value="@item.Id" />
-                            <button formaction="?handler=DelPlay" onclick="return confirm('确定删除？')">删除</button>
+                            <button class="btn btn-sm btn-danger" onclick="return confirm('确定删除该玩法？')">删除</button>
                         </form>
                     </td>
                 </tr>
             }
-        </table>
-    </div>
-</body>
-</html>
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        // 重置彩种弹窗表单
+        function resetLotteryForm(){
+            document.getElementById("lotteryIdInput").value = "0";
+            document.getElementById("lotteryNameInput").value = "";
+            document.getElementById("lotterySortInput").value = "0";
+            document.getElementById("lotteryEnableCheck").checked = true;
+        }
+        // 编辑彩种回填数据
+        function editLottery(id,name,sort,enable){
+            document.getElementById("lotteryIdInput").value = id;
+            document.getElementById("lotteryNameInput").value = name;
+            document.getElementById("lotterySortInput").value = sort;
+            document.getElementById("lotteryEnableCheck").checked = enable;
+            var modal = new bootstrap.Modal(document.getElementById('lotteryModal'));
+            modal.show();
+        }
+
+        // 重置玩法弹窗表单
+        function resetPlayForm(){
+            document.getElementById("playIdInput").value = "0";
+            document.getElementById("playLotteryIdInput").value = "1";
+            document.getElementById("playNameInput").value = "";
+            document.getElementById("playBonusInput").value = "0";
+            document.getElementById("playSortInput").value = "0";
+            document.getElementById("playEnableCheck").checked = true;
+        }
+        // 编辑玩法回填数据
+        function editPlay(id,lotteryId,playName,bonus,sort,enable){
+            document.getElementById("playIdInput").value = id;
+            document.getElementById("playLotteryIdInput").value = lotteryId;
+            document.getElementById("playNameInput").value = playName;
+            document.getElementById("playBonusInput").value = bonus;
+            document.getElementById("playSortInput").value = sort;
+            document.getElementById("playEnableCheck").checked = enable;
+            var modal = new bootstrap.Modal(document.getElementById('playModal'));
+            modal.show();
+        }
+    </script>
+}

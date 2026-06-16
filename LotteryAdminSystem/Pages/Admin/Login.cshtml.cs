@@ -1,9 +1,12 @@
 using LotteryAdminSystem.Data;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
-using System.Security.Cryptography;
-using System.Text;
+using System.Security.Claims;
 
 namespace LotteryAdminSystem.Pages.Admin
 {
@@ -20,39 +23,45 @@ namespace LotteryAdminSystem.Pages.Admin
 
         public IActionResult OnGet()
         {
-            // 已登录直接跳后台首页
             if (!string.IsNullOrEmpty(HttpContext.Session.GetString("AdminName")))
-            {
                 return RedirectToPage("/Users/Index");
-            }
             return Page();
         }
 
-        public IActionResult OnPost()
+        public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
                 return Page();
 
-            var pwdHash = HashPwd(Input.Password);
-            var admin = _db.Admins.FirstOrDefault(a =>
-                a.AdminName == Input.AdminName && a.PasswordHash == pwdHash);
-
+            // 异步查询数据库
+            var admin = await _db.Admins.FirstOrDefaultAsync(a => a.AdminName == Input.AdminName);
             if (admin == null)
             {
                 ModelState.AddModelError("", "账号或密码错误");
                 return Page();
             }
 
-            // 写入Session 标记登录
-            HttpContext.Session.SetString("AdminName", admin.AdminName);
-            return RedirectToPage("/Users/Index");
-        }
+            var hasher = new PasswordHasher<LotteryModels.Admins>();
+            var verify = hasher.VerifyHashedPassword(admin, admin.PasswordHash, Input.Password);
+            if (verify != PasswordVerificationResult.Success)
+            {
+                ModelState.AddModelError("", "账号或密码错误");
+                return Page();
+            }
 
-        private string HashPwd(string pwd)
-        {
-            using var sha = SHA256.Create();
-            var bytes = Encoding.UTF8.GetBytes(pwd);
-            return Convert.ToBase64String(sha.ComputeHash(bytes));
+            // 可选：保留Session存储
+            HttpContext.Session.SetString("AdminName", admin.AdminName);
+
+            // 异步签发登录Cookie，适配 [Authorize] 授权校验
+            List<Claim> claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.Name, admin.AdminName)
+    };
+            ClaimsIdentity identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            ClaimsPrincipal principal = new ClaimsPrincipal(identity);
+            await HttpContext.SignInAsync(principal);
+
+            return RedirectToPage("/Index");
         }
     }
 

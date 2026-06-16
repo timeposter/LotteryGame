@@ -30,7 +30,7 @@ namespace LotteryAdminSystem.Pages.Users
         public IActionResult OnPost()
         {
             if (string.IsNullOrEmpty(HttpContext.Session.GetString("AdminName")))
-                return RedirectToPage("/Admin/Login");
+                return RedirectToPage("/Admins/Login");
 
             if (!ModelState.IsValid)
                 return Page();

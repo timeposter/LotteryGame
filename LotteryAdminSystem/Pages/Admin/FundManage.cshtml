@@ -1,0 +1,64 @@
+﻿@page
+@model FundManageModel
+@{
+    Layout = "_Layout";
+    ViewData["Menu"] = "fund";
+}
+<h4>用户资金流水管理</h4>
+
+<div class="mt-3">
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>流水ID</th>
+                <th>用户ID</th>
+                <th>用户名</th>
+                <th>资金类型</th>
+                <th>变动金额</th>
+                <th>变动前余额</th>
+                <th>变动后余额</th>
+                <th>备注</th>
+                <th>操作时间</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.FundList)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.UserId</td>
+                    <td>@item.UserName</td>
+                    <td>
+                        @switch (item.Type)
+                        {
+                            case 1:
+                                <span class="text-success">充值</span>
+                                break;
+                            case 2:
+
+                                <span class="text-danger">提款</span>
+                                break;
+                            case 3:
+
+                                <span class="text-secondary">投注</span>
+                                break;
+                            case 4:
+
+                                <span class="text-primary">中奖</span>
+                                break;
+                            default:
+
+                                <span>未知</span>
+                                break;
+                        }
+                    </td>
+                    <td>@item.Money.ToString("F2")</td>
+                    <td>@item.BeforeBalance.ToString("F2")</td>
+                    <td>@item.AfterBalance.ToString("F2")</td>
+                    <td>@(item.Remark ?? "-")</td>
+                    <td>@item.CreateTime</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
