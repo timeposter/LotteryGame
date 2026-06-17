@@ -27,7 +27,25 @@ namespace LotteryAdminSystem
 
             // 配置类绑定、HttpClient
             builder.Services.Configure<LotteryPullSetting>(builder.Configuration.GetSection("LotteryPullSetting"));
-            builder.Services.AddHttpClient();
+            builder.Services.AddHttpClient("LotteryApiClient", client =>
+            {
+                // 外层总超时 > 内部http独立超时，避免冲突
+                client.Timeout = TimeSpan.FromSeconds(18);
+                // CDN校验必需，删除直接403拦截
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0.0.0 Safari/537.36");
+                client.DefaultRequestHeaders.Referrer = new Uri("https://www.manycailm.com/");
+                client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+            })
+.ConfigurePrimaryHttpMessageHandler(() =>
+{
+    return new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = (msg, cert, chain, err) => true,
+        UseCookies = true,
+        CookieContainer = new System.Net.CookieContainer(),
+        MaxConnectionsPerServer = 20
+    };
+});
 
             // EF Core MySQL DbContext
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

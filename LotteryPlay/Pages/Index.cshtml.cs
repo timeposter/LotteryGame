@@ -80,7 +80,7 @@ namespace LotteryPlay.Pages
         }
         #endregion
 
-        #region 原有：期号、开奖记录、自动派奖（完整保留）
+        #region 接口：获取当前期号、倒计时、投注状态（纯读库，不再自动开奖/建期）
         public async Task<IActionResult> OnGetCurrentPeriod(int lotId)
         {
             var lotteryConfig = await _dbContext.Lottery.FindAsync(lotId);
@@ -89,123 +89,31 @@ namespace LotteryPlay.Pages
                 return new JsonResult(new { code = 0, msg = "彩种已禁用" });
             }
 
-            int totalSecond = lotteryConfig.PeriodSecond;
             int stopSecond = lotteryConfig.StopBetSecond;
 
+            // 只查询：当前最新【未开奖】期（IsOpen = 0）
             var current = await _dbContext.LotteryDatas
                 .Where(m => m.LotteryId == lotId && m.IsOpen == 0)
                 .OrderByDescending(m => m.CreateTime)
                 .FirstOrDefaultAsync();
 
-            if (current == null || current.EndTime < DateTime.Now)
+            // 数据库暂无待开奖期
+            if (current == null)
             {
-                Random rd = new Random();
-                List<int> open = new List<int>();
-                for (int i = 0; i < 5; i++) open.Add(rd.Next(0, 10));
-                current.OpenNumber = string.Join(",", open);
-                current.OpenTime = DateTime.Now;
-                current.IsOpen = 1;
-                _dbContext.Update(current);
-
-                var allBets = await _dbContext.UserBets
-                    .Where(w => w.LotteryId == lotId && w.PeriodNo == current.PeriodNo && !w.IsWin)
-                    .Include(x => x.Play)
-                    .ToListAsync();
-
-                var playCfg = await _dbContext.PlayConfig.ToListAsync();
-                foreach (var bet in allBets)
+                return new JsonResult(new
                 {
-                    var p = playCfg.FirstOrDefault(w => w.Id == bet.PlayId);
-                    bool win = false;
-                    decimal prize = 0;
-                    var openNumArr = current.OpenNumber.Split(',').Select(int.Parse).ToList();
-
-                    if (p.PlayName.Contains("直选"))
-                    {
-                        var userPos = bet.BetNumber.Split('|');
-                        bool ok = true;
-                        for (int i = 0; i < 5; i++)
-                        {
-                            if (!userPos[i].Contains(openNumArr[i].ToString())) { ok = false; break; }
-                        }
-                        win = ok;
-                    }
-                    else if (p.PlayName.Contains("组选三"))
-                    {
-                        var last3 = openNumArr.Skip(2).Take(3).ToList();
-                        var userSel = bet.BetNumber.Split(',').Select(int.Parse).ToList();
-                        var g = last3.GroupBy(x => x).Select(g => g.Count()).OrderByDescending(x => x).ToList();
-                        bool isZu3 = g[0] == 2 && g[1] == 1;
-                        if (isZu3 && last3.All(x => userSel.Contains(x))) win = true;
-                    }
-                    else if (p.PlayName.Contains("组选六"))
-                    {
-                        var last3 = openNumArr.Skip(2).Take(3).ToList();
-                        var userSel = bet.BetNumber.Split(',').Select(int.Parse).ToList();
-                        bool isZu6 = last3.Distinct().Count() == 3;
-                        if (isZu6 && last3.All(x => userSel.Contains(x))) win = true;
-                    }
-
-                    if (win)
-                    {
-                        prize = bet.BetMoney * p.BonusAmount;
-                        var u = await _dbContext.Users.FindAsync(bet.UserId);
-                        u.Balance += prize;
-                        bet.IsWin = true;
-                        bet.WinMoney = prize;
-                    }
-                }
-
-                if (current != null)
-                {
-                    current.IsOpen = 1;
-                    _dbContext.LotteryDatas.Update(current);
-                }
-
-                string periodNo = await GetNewPeriodNo(lotId);
-                DateTime createTime = DateTime.Now;
-                DateTime endTime = createTime.AddSeconds(totalSecond);
-
-                current = new LotteryData
-                {
-                    LotteryId = lotId,
-                    PeriodNo = periodNo,
-                    OpenNumber = "",
-                    IsOpen = 0,
-                    CreateTime = createTime,
-                    EndTime = endTime
-                };
-                _dbContext.LotteryDatas.Add(current);
-
-                var traceList = await _dbContext.UserTrace
-                    .Where(w => w.LotteryId == lotId && w.LeftCount > 0 && w.Status == 0)
-                    .ToListAsync();
-
-                foreach (var trace in traceList)
-                {
-                    UserBet bet = new UserBet()
-                    {
-                        UserId = trace.UserId,
-                        LotteryId = trace.LotteryId,
-                        PlayId = trace.PlayId,
-                        PeriodNo = current.PeriodNo,
-                        BetNumber = trace.BetNumber,
-                        Multiple = trace.Multiple,
-                        BetMoney = trace.PerMoney,
-                        SourceType = 1,
-                        TraceId = trace.Id
-                    };
-                    _dbContext.UserBets.Add(bet);
-                    trace.LeftCount--;
-                    if (trace.LeftCount <= 0) trace.Status = 1;
-                }
-                await _dbContext.SaveChangesAsync();
+                    code = 0,
+                    msg = "暂无待开奖期，请管理员维护期号数据"
+                });
             }
 
-            TimeSpan leftTime = current.EndTime - DateTime.Now;
+            // 计算剩余时间、投注状态
+            TimeSpan leftTime = current.OpenTime.Value - DateTime.Now;
             string countTime = leftTime.TotalSeconds > 0
                 ? $"{(int)leftTime.TotalMinutes:D2}:{leftTime.Seconds:D2}"
                 : "00:00";
+
+            // 是否可投注：当前时间 < 截止秒数
             bool canBet = leftTime.TotalSeconds > stopSecond;
             string statusText = canBet ? "投注中" : "已截止";
 
@@ -218,25 +126,7 @@ namespace LotteryPlay.Pages
                 status = statusText
             });
         }
-
-        public async Task<IActionResult> OnGetLotteryHistory(int lotId)
-        {
-            var history = await _dbContext.LotteryDatas
-                .Where(m => m.LotteryId == lotId && m.IsOpen == 1)
-                .OrderByDescending(m => m.CreateTime)
-                .Take(10)
-                .Select(m => new
-                {
-                    period = m.PeriodNo,
-                    openTime = m.OpenTime.Value.ToString("HH:mm:ss"),
-                    openNumber = m.OpenNumber
-                })
-                .ToListAsync();
-
-            return new JsonResult(new { code = 1, data = history });
-        }
         #endregion
-
         #region 批量投注接口（适配前端投注列表）
         [HttpPost]
         public async Task<IActionResult> OnPostBet(int lotteryId, string period, string betItems)
@@ -392,7 +282,22 @@ namespace LotteryPlay.Pages
 
             return new JsonResult(new { code = 1, msg = $"追号成功！首期已下单，剩余{trace.LeftCount}期自动追投" });
         }
+        public async Task<IActionResult> OnGetLotteryHistory(int lotId)
+        {
+            var history = await _dbContext.LotteryDatas
+                .Where(m => m.LotteryId == lotId && m.IsOpen == 1)
+                .OrderByDescending(m => m.CreateTime)
+                .Take(10)
+                .Select(m => new
+                {
+                    period = m.PeriodNo,
+                    openTime = m.OpenTime.HasValue ? m.OpenTime.Value.ToString("HH:mm:ss") : "",
+                    openNumber = m.OpenNumber ?? ""
+                })
+                .ToListAsync();
 
+            return new JsonResult(new { code = 1, data = history });
+        }
         /// <summary>【改造后】获取历史期号 + 投注截止时间（前端列表展示用）</summary>
         public async Task<JsonResult> OnGetGetHistoryPeriod(int lid)
         {
@@ -407,7 +312,7 @@ namespace LotteryPlay.Pages
                 {
                     x.PeriodNo,
                     // 计算真实投注截止时间：期结束时间 - 停售秒数
-                    StopTime = x.EndTime.AddSeconds(-stopSecond)
+                    StopTime = x.OpenTime.Value.AddSeconds(-stopSecond)
                 })
                 .ToListAsync();
 

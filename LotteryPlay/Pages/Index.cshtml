@@ -628,11 +628,11 @@
                 <div class="gradient-border-box" style="width:250px;height:180px">
                     <div class="gradient-border-inner">
                         <div class="period-info">
-                    <b>最新开奖结果</b>
-                    <div id="newOpenData">等待加载...</div>
-                   </div>
-                   </div>
-                   </div>
+                            <b>最新开奖结果</b>
+                            <div id="newOpenData">等待加载...</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="left-bottom">
@@ -1074,6 +1074,10 @@
                 playList = res.data || [];
     var bonusHtml = "";
     var playHtml = "";
+        // 标记是否找到直选玩法
+    let hasSelectPlay = false;
+    let targetPlayId = 0;
+    let targetPlayName = "";
     if (playList.length === 0) {
         playHtml = "<p style='color:#666;margin:0;'>暂无可用玩法</p>";
         // 无玩法时，表格显示空提示
@@ -1081,30 +1085,51 @@
         bonusHtml = '<tr><td colspan="2" style="color:#999;">暂无奖金配置</td></tr>';
         $("#numWrap").html("<p style='color:#666;text-align:center;padding:20px;'>暂无玩法，无法选号</p>");
     } else {
-        for (var i = 0; i < playList.length; i++) {
-            var item = playList[i];
-            var active = i === 0 ? "active" : "";
-            playHtml += '<button class="' + active + '" data-playid="' + item.id + '">' + item.playName + '</button>';
+            playHtml = "";
+    bonusHtml = "";
+    // 标记是否找到直选玩法
+    let hasSelectPlay = false;
+    let targetPlayId = 0;
+    let targetPlayName = "";
 
-            // ========== 奖金表格行逻辑 ==========
-            let bonusVal = Number(item.BonusAmount ?? item.bonusAmount ?? 0);
-            let bonusText = "";
-            // 处理奖金：为0/空 → 显示「暂无奖金」，否则显示金额+单位
-            if (isNaN(bonusVal) || bonusVal <= 0) {
-                bonusText = "<span style='color:#999;'>暂无奖金</span>";
-            } else {
-                bonusText = bonusVal + " 元";
-            }
-            // 拼接表格行
-            bonusHtml += `<tr>
-                <td>${item.playName}</td>
-                <td>${bonusText}</td>
-            </tr>`;
+    for (var i = 0; i < playList.length; i++) {
+        var item = playList[i];
+        // 判断玩法名称包含 "直选"，即为默认选中项
+        let isActive = item.playName.indexOf("直选") > -1;
+        if(isActive){
+            hasSelectPlay = true;
+            targetPlayId = item.id;
+            targetPlayName = item.playName;
         }
-        currPlayId = playList[0].Id;
-        currPlayName = playList[0].PlayName;
-        renderNumPanel(currPlayName);
+        let activeClass = isActive ? "active" : "";
+        playHtml += '<button class="' + activeClass + '" data-playid="' + item.id + '">' + item.playName + '</button>';
+
+        // ========== 奖金表格行逻辑（原有逻辑不变） ==========
+        let bonusVal = Number(item.BonusAmount ?? item.bonusAmount ?? 0);
+        let bonusText = "";
+        if (isNaN(bonusVal) || bonusVal <= 0) {
+            bonusText = "<span style='color:#999;'>暂无奖金</span>";
+        } else {
+            bonusText = bonusVal + " 元";
+        }
+        bonusHtml += `<tr>
+            <td>${item.playName}</td>
+            <td>${bonusText}</td>
+        </tr>`;
     }
+
+    // 赋值全局玩法变量：找到直选就用直选，没找到则用第一个（兼容兜底）
+    if(hasSelectPlay){
+        currPlayId = targetPlayId;
+        currPlayName = targetPlayName;
+    }else{
+        currPlayId = playList[0].id;
+        currPlayName = playList[0].PlayName;
+    }
+
+    // 渲染对应选号面板
+    renderNumPanel(currPlayName);
+    loadLatestOpen(lotteryId);    }
 
     $("#playGroup").html(playHtml);
     // 把拼接好的表格行塞入 tbody
@@ -1191,11 +1216,18 @@
             $("#newOpenData").html('<span style="color:red;">开奖数据加载失败</span>');
         });
     }
-        function getHistory(lotId) {
-            $.get("/Index?handler=LotteryHistory&lotId=" + lotId, function (res) {
-                if (res.code === 1) renderHistory(res.data);
-            }, "json");
-        }
+            function getHistory(lotId) {
+        $.get("/Index?handler=LotteryHistory&lotId=" + lotId, function (res) {
+            if (res && res.code === 1) {
+                renderHistory(res.data);
+            } else {
+                console.log("历史数据接口返回异常", res);
+            }
+        }).fail(function (xhr) {
+            console.log("历史数据接口请求失败，状态码：" + xhr.status);
+            $("#historyTable tbody").html('<tr><td colspan="3" style="color:red;">数据加载失败</td></tr>');
+        });
+    }
 
         function getCurrentPeriod(lotId) {
             $.get("/Index?handler=CurrentPeriod&lotId=" + lotId, function (res) {
@@ -1424,29 +1456,6 @@
             });
         });
 
-        // 顶部彩种下拉
-        $.get("/Index?handler=GetLotteryList", function (res) {
-            if (res && res.code === 1 && res.data && res.data.length > 0) {
-                var opt = "";
-                for (var i = 0; i < res.data.length; i++) {
-                    var it = res.data[i];
-                    opt += '<option value="' + it.id + '">' + it.lotteryName + '</option>';
-                }
-                $("#lotterySelect").html(opt);
-
-                var first = res.data[0];
-                currLotteryId = first.id;
-                $("#lotteryTitle").text(first.lotteryName);
-
-                loadPlay(currLotteryId);
-                getCurrentPeriod(currLotteryId);
-                getHistory(currLotteryId);
-
-                $("#lotteryNav .lottery-nav-item").removeClass("active");
-                $("#lotteryNav .lottery-nav-item[data-id='" + currLotteryId + "']").addClass("active");
-            }
-        }, "json");
-
         $("#lotterySelect").on("change", function () {
             var id = parseInt($(this).val());
             currLotteryId = id;
@@ -1463,6 +1472,11 @@
 
         // 初始化
         loadLottery();
+            // 延迟执行，保证彩种列表渲染完成
+    setTimeout(function(){
+        // 选中顶部导航中 data-id=1 的河内彩
+        $('#lotBox li[data-id="1"]').click();
+    }, 200);
     });
             // 全局获取弹窗DOM
     var debugMask = document.getElementById('debugMask');
