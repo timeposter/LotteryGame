@@ -1,18 +1,14 @@
-using LotteryModels;
-using LotteryPlay.Data;
-using LotteryPlay.Models;
+using LotteryCore.Enetities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace LotteryPlay.Pages.Account
 {
     public class TraceRecordModel : PageModel
     {
-        private readonly AppDbContext _db;
-        public TraceRecordModel(AppDbContext db)
+        private readonly AppDBContext _db;
+        public TraceRecordModel(AppDBContext db)
         {
             _db = db;
         }

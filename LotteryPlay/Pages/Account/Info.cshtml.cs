@@ -1,14 +1,13 @@
+using LotteryCore.Enetities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using LotteryPlay.Data;
-using LotteryPlay.Models;
 
 namespace LotteryPlay.Pages.Account
 {
     public class InfoModel : PageModel
     {
-        private readonly AppDbContext _db;
-        public InfoModel(AppDbContext db)
+        private readonly AppDBContext _db;
+        public InfoModel(AppDBContext db)
         {
             _db = db;
         }

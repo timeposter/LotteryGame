@@ -1,4 +1,5 @@
 ﻿using LotteryAdminSystem.Data;
+using LotteryCore.Enetities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,8 +10,8 @@ namespace LotteryAdminSystem.Controller
     [ApiController]
     public class LotteryLocalApiController : ControllerBase
     {
-        private readonly AppDbContext _db;
-        public LotteryLocalApiController(AppDbContext db)
+        private readonly AppDBContext _db;
+        public LotteryLocalApiController(AppDBContext db)
         {
             _db = db;
         }

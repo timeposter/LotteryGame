@@ -1,16 +1,14 @@
-﻿using LotteryPlay.Data;
+﻿using LotteryCore.Enetities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Threading.Tasks;
 
 [Route("api/[controller]")]
 [ApiController]
 public class LotteryController : ControllerBase
 {
-    private readonly AppDbContext _dbContext;
+    private readonly AppDBContext _dbContext;
 
-    public LotteryController(AppDbContext dbContext)
+    public LotteryController(AppDBContext dbContext)
     {
         _dbContext = dbContext;
     }

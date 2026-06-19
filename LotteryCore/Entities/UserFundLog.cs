@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LotteryModels
+namespace LotteryCore.Enetities
 {
     public class UserFundLog
     {

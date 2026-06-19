@@ -1,6 +1,4 @@
-using LotteryModels;
-using LotteryPlay.Data;
-using LotteryPlay.Models;
+using LotteryCore.Enetities;
 using LotteryPlay.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -12,9 +10,9 @@ namespace LotteryPlay.Pages.Account
     public class RegisterModel : PageModel
     {
        
-            private readonly AppDbContext _context;
+            private readonly AppDBContext _context;
 
-            public RegisterModel(AppDbContext context)
+            public RegisterModel(AppDBContext context)
             {
                 _context = context;
             }

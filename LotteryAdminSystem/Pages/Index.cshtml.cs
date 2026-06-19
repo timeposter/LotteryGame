@@ -1,4 +1,4 @@
-using LotteryAdminSystem.Data;
+using LotteryCore.Enetities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -8,8 +8,8 @@ namespace LotteryAdminSystem.Pages
     [Authorize] // 必须登录才能访问后台
     public class IndexModel : PageModel
     {
-        private readonly AppDbContext _db;
-        public IndexModel(AppDbContext db)
+        private readonly AppDBContext _db;
+        public IndexModel(AppDBContext db)
         {
             _db = db;
         }

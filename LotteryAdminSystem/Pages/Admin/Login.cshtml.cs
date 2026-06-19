@@ -1,4 +1,4 @@
-using LotteryAdminSystem.Data;
+using LotteryCore.Enetities;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
@@ -12,8 +12,8 @@ namespace LotteryAdminSystem.Pages.Admin
 {
     public class LoginModel : PageModel
     {
-        private readonly AppDbContext _db;
-        public LoginModel(AppDbContext db)
+        private readonly AppDBContext _db;
+        public LoginModel(AppDBContext db)
         {
             _db = db;
         }
@@ -41,7 +41,7 @@ namespace LotteryAdminSystem.Pages.Admin
                 return Page();
             }
 
-            var hasher = new PasswordHasher<LotteryModels.Admins>();
+            var hasher = new PasswordHasher<Admins>();
             var verify = hasher.VerifyHashedPassword(admin, admin.PasswordHash, Input.Password);
             if (verify != PasswordVerificationResult.Success)
             {

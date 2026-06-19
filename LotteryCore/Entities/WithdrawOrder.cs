@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LotteryModels
+namespace LotteryCore.Enetities
 {
     /// <summary>
     /// USDT 提款订单表

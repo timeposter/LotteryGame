@@ -1,5 +1,4 @@
-using LotteryAdminSystem.Data;
-using LotteryModels;
+using LotteryCore.Enetities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -8,11 +7,11 @@ namespace LotteryAdminSystem.Pages.Lotterys
 {
     public class LotteryConfigModel : PageModel
     {
-        private readonly AppDbContext _db;
+        private readonly AppDBContext _db;
         public List<Lottery> LotteryList { get; set; } = new();
         public List<PlayConfig> PlayList { get; set; } = new();
 
-        public LotteryConfigModel(AppDbContext db)
+        public LotteryConfigModel(AppDBContext db)
         {
             _db = db;
         }

@@ -1,8 +1,6 @@
-﻿
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace LotteryModels
+namespace LotteryCore.Enetities
 {
     /// <summary>开奖期号数据</summary>
     public class LotteryData

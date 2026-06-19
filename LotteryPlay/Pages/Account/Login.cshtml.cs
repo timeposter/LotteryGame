@@ -1,4 +1,4 @@
-using LotteryPlay.Data;
+using LotteryCore.Enetities;
 using LotteryPlay.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -7,9 +7,9 @@ namespace LotteryPlay.Pages.Account
 {
     public class LoginModel : PageModel
     {
-        private readonly AppDbContext _context;
+        private readonly AppDBContext _context;
 
-        public LoginModel(AppDbContext context)
+        public LoginModel(AppDBContext context)
         {
             _context = context;
         }

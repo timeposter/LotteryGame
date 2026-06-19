@@ -1,16 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using LotteryPlay.Data;
-using LotteryPlay.Models;
-using LotteryModels;
+using LotteryCore.Enetities;
 
 namespace LotteryPlay.Pages.Account
 {
     public class FundLogModel : PageModel
     {
-        private readonly AppDbContext _db;
-        public FundLogModel(AppDbContext db)
+        private readonly AppDBContext _db;
+        public FundLogModel(AppDBContext db)
         {
             _db = db;
         }

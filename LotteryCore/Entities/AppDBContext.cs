@@ -1,13 +1,11 @@
-﻿using LotteryModels;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
-namespace LotteryAdminSystem.Data
+namespace LotteryCore.Enetities
 {
-    public class AppDbContext : DbContext
+    public class AppDBContext : DbContext
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        public AppDBContext(DbContextOptions<AppDBContext> options) : base(options)
         {
-
         }
 
         public DbSet<User> Users { get; set; }
@@ -20,6 +18,12 @@ namespace LotteryAdminSystem.Data
         public DbSet<UserBet> BetRecords { get; set; }
         public DbSet<LotteryData> LotteryDatas { get; set; }
         public DbSet<UsdtAccount> UsdtAccounts { get; set; }
+        public DbSet<UserBet> UserBets { get; set; }
+        public DbSet<LotteryCategory> LotteryCategories { get; set; }
+        public DbSet<UserTrace> UserTrace { get; set; }
+        public DbSet<RechargeOrder> RechargeOrders { get; set; }
+        public DbSet<WithdrawOrder> WithdrawOrders { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // 联合唯一索引：彩种+期号不能重复
@@ -28,6 +32,8 @@ namespace LotteryAdminSystem.Data
                 .IsUnique();
             modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
             modelBuilder.Entity<Admins>().HasIndex(a => a.AdminName).IsUnique();
+            modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
+            modelBuilder.Entity<LotteryData>().HasIndex(l => l.PeriodNo).IsUnique();
         }
     }
 }

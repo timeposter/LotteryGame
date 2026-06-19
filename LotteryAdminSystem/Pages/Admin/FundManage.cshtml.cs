@@ -1,5 +1,4 @@
-using LotteryAdminSystem.Data;
-using LotteryModels;
+using LotteryCore.Enetities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -9,8 +8,8 @@ namespace LotteryAdminSystem.Pages.Admin
     [Authorize]
     public class FundManageModel : PageModel
     {
-        private readonly AppDbContext _db;
-        public FundManageModel(AppDbContext db)
+        private readonly AppDBContext _db;
+        public FundManageModel(AppDBContext db)
         {
             _db = db;
         }

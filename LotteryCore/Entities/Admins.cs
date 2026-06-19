@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace LotteryModels
+namespace LotteryCore.Enetities
 {
     public class Admins
     {

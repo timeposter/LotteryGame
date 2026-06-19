@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace LotteryModels
+namespace LotteryCore.Enetities
 {
     /// <summary>用户投注记录</summary>
 

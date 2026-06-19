@@ -1,7 +1,7 @@
-﻿using LotteryModels;
+﻿using LotteryCore;
+using LotteryCore.Enetities;
 using LotteryPlay.Data;
 using LotteryPlay.Hubs;
-using LotteryPlay.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 

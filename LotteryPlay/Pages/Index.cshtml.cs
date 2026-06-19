@@ -1,23 +1,19 @@
-using LotteryModels;
-using LotteryPlay.Data;
-using LotteryPlay.Models;
+using LotteryCore.Enetities;
 using LotteryPlay.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
 
 namespace LotteryPlay.Pages
 {
     public class IndexModel : PageModel
     {
-        private readonly AppDbContext _dbContext;
+        private readonly AppDBContext _dbContext;
         public string UserName { get; set; } = string.Empty;
         public decimal Balance { get; set; }
 
-        public IndexModel(AppDbContext dbContext)
+        public IndexModel(AppDBContext dbContext)
         {
             _dbContext = dbContext;
         }

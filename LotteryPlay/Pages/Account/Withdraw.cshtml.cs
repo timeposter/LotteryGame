@@ -1,17 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using LotteryPlay.Data;
-using LotteryPlay.Models;
-using LotteryModels;
-using System;
-using System.Threading.Tasks;
+using LotteryCore.Enetities;
 
 namespace LotteryPlay.Pages.Account
 {
     public class WithdrawModel : PageModel
     {
-        private readonly AppDbContext _db;
-        public WithdrawModel(AppDbContext db)
+        private readonly AppDBContext _db;
+        public WithdrawModel(AppDBContext db)
         {
             _db = db;
         }

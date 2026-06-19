@@ -1,4 +1,4 @@
-﻿namespace LotteryPlay.Models
+﻿namespace LotteryCore.Enetities
 {
     /// <summary>彩种配置表</summary>
     public class LotteryCategory

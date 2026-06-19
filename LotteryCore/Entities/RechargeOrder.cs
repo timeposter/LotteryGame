@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LotteryModels
+namespace LotteryCore
 {
     /// <summary>
     /// USDT充值订单

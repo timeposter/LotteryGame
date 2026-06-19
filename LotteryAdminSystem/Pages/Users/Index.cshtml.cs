@@ -1,5 +1,5 @@
 using LotteryAdminSystem.Data;
-using LotteryModels;
+using LotteryCore.Enetities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -7,8 +7,8 @@ namespace LotteryAdminSystem.Pages.Users
 {
     public class IndexModel : PageModel
     {
-        private readonly AppDbContext _db;
-        public IndexModel(AppDbContext db)
+        private readonly AppDBContext _db;
+        public IndexModel(AppDBContext db)
         {
             _db = db;
         }

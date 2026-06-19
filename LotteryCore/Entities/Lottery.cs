@@ -1,4 +1,4 @@
-﻿namespace LotteryModels
+﻿namespace LotteryCore.Enetities
 {
     public class Lottery
     {
@@ -11,6 +11,6 @@
 
         /// <summary>投注截止提前秒数</summary>
         public int StopBetSecond { get; set; }
-
+        public string? ApiCode { get;set; } = string.Empty;
     }
 }

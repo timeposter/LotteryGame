@@ -1,5 +1,4 @@
-using LotteryModels;
-using LotteryPlay.Data;
+using LotteryCore.Enetities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +7,7 @@ namespace LotteryPlay.Pages.Account
 {
     public class BetRecordModel : PageModel
     {
-        private readonly AppDbContext _dbContext;
+        private readonly AppDBContext _dbContext;
 
         #region 页面绑定属性
         // 当前页码
@@ -28,7 +27,7 @@ namespace LotteryPlay.Pages.Account
         public List<UserBet> BetRecordList { get; set; } = new List<UserBet>();
         #endregion
 
-        public BetRecordModel(AppDbContext dbContext)
+        public BetRecordModel(AppDBContext dbContext)
         {
             _dbContext = dbContext;
         }

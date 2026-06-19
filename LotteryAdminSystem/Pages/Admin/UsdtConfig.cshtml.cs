@@ -1,5 +1,4 @@
-using LotteryAdminSystem.Data;
-using LotteryModels;
+using LotteryCore.Enetities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -10,10 +9,10 @@ namespace LotteryAdminSystem.Pages.Admin
     [Authorize]
     public class UsdtConfigModel : PageModel
     {
-        private readonly AppDbContext _db;
+        private readonly AppDBContext _db;
         public List<UsdtAccount> UsdtList { get; set; } = new();
 
-        public UsdtConfigModel(AppDbContext db)
+        public UsdtConfigModel(AppDBContext db)
         {
             _db = db;
         }

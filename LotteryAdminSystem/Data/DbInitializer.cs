@@ -1,4 +1,4 @@
-﻿using LotteryModels;
+﻿using LotteryCore.Enetities;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -9,7 +9,7 @@ namespace LotteryAdminSystem.Data
         public static void Initialize(IServiceProvider services)
         {
             using var scope = services.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var db = scope.ServiceProvider.GetRequiredService<AppDBContext>();
 
             // 使用 EnsureCreated 在没有迁移时也能根据模型创建表（可替换为 db.Database.Migrate() 如果你使用迁移）
             db.Database.EnsureCreated();

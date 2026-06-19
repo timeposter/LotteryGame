@@ -1,15 +1,25 @@
-﻿using LotteryAdminSystem.Data;
+﻿using LotteryCore.Enetities;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
-
+using Serilog;
 namespace LotteryAdminSystem
 {
     public class Program
     {
         public static void Main(string[] args)
         {
+            Log.Logger=new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                //.WriteTo.Console()
+                .WriteTo.File("logs/lottery_service_.log", rollingInterval: RollingInterval.Day)
+                .CreateBootstrapLogger();
             var builder = WebApplication.CreateBuilder(args);
-
+            // 新增：将DataProtection密钥存到程序目录，不读取用户目录
+            builder.Services.AddDataProtection()
+                .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "DataProtectKeys")));
+            builder.Host.UseWindowsService();   
+            builder.Host.UseSerilog();
             // Razor Pages 服务注册
             builder.Services.AddRazorPages(options =>
             {
@@ -19,7 +29,7 @@ namespace LotteryAdminSystem
             {
                 opt.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
             })
-           
+
             .AddViewOptions(v =>
             {
                 v.HtmlHelperOptions.ClientValidationEnabled = true;
@@ -49,7 +59,7 @@ namespace LotteryAdminSystem
 
             // EF Core MySQL DbContext
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-            builder.Services.AddDbContext<AppDbContext>(options =>
+            builder.Services.AddDbContext<AppDBContext>(options =>
                 options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
             // Session 配置
@@ -62,7 +72,7 @@ namespace LotteryAdminSystem
             });
 
             // 后台定时拉取开奖服务
-            builder.Services.AddHostedService<LotteryPullBackgroundService>();
+            //builder.Services.AddHostedService<LotteryPullBackgroundService>();
 
             // Cookie 身份认证
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

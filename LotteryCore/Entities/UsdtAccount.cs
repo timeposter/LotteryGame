@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LotteryModels
+namespace LotteryCore.Enetities
 {
     public class UsdtAccount
     {

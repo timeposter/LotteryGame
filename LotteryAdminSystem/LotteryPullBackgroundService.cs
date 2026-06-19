@@ -1,17 +1,9 @@
 ﻿using LotteryAdminSystem.Converter;
 using LotteryAdminSystem.Data;
-using LotteryModels;
+using LotteryCore.Enetities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LotteryAdminSystem
 {
@@ -40,9 +32,15 @@ namespace LotteryAdminSystem
             _logger = logger;
             _httpClientFactory = httpClientFactory;
         }
-
+        public override Task StartAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("拉取服务初始化完成，后台线程启动");
+            return base.StartAsync(cancellationToken);
+        }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            // 延迟200ms释放主线程，避免占用服务启动窗口
+            await Task.Delay(200, stoppingToken);
             _logger.LogInformation("开奖数据后台拉取常驻服务已启动，全局超时{0}s，单彩种熔断{1}ms", GlobalLoopTimeoutSec, SingleLotteryTaskTimeoutMs);
             Random random = new Random();
 
@@ -84,7 +82,7 @@ namespace LotteryAdminSystem
         private async Task RunPullJobLoopAsync(CancellationToken token)
         {
             using var scope = _scopeFactory.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var db = scope.ServiceProvider.GetRequiredService<AppDBContext>();
 
             var enableLotteryList = await db.Lottery
                 .Where(l => l.IsEnable && l.Id == 1)
@@ -115,7 +113,7 @@ namespace LotteryAdminSystem
 
         /// <summary>单个彩种：请求远程API + 解析JSON + 入库LotteryData</summary>
         private async Task ProcessSingleLotteryRemotePullAsync(
-            Lottery lottery, string lotteryApiCode, AppDbContext db, CancellationToken token)
+            Lottery lottery, string lotteryApiCode, AppDBContext db, CancellationToken token)
         {
             var apiResult = await RequestRemoteLotteryApiAsync(lotteryApiCode, token);
             if (apiResult == null || apiResult.code != 0)

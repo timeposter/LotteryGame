@@ -1,6 +1,5 @@
-using LotteryModels;
-using LotteryPlay.Data;
-using LotteryPlay.Models;
+using LotteryCore;
+using LotteryCore.Enetities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -10,8 +9,8 @@ namespace LotteryPlay.Pages.Account
 {
     public class RechargeModel : PageModel
     {
-        private readonly AppDbContext _db;
-        public RechargeModel(AppDbContext db)
+        private readonly AppDBContext _db;
+        public RechargeModel(AppDBContext db)
         {
             _db = db;
         }

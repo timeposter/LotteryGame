@@ -1,13 +1,12 @@
-using LotteryAdminSystem.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using LotteryModels;
+using LotteryCore.Enetities;
 namespace LotteryAdminSystem.Pages.Users
 {
     public class EditModel : PageModel
     {
-        private readonly AppDbContext _db;
-        public EditModel(AppDbContext db)
+        private readonly AppDBContext _db;
+        public EditModel(AppDBContext db)
         {
             _db = db;
         }
