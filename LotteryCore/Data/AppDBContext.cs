@@ -1,6 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using LotteryCore.Enetities;
+using Microsoft.EntityFrameworkCore;
 
-namespace LotteryCore.Enetities
+namespace LotteryCore.Data
 {
     public class AppDBContext : DbContext
     {

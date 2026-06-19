@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using LotteryCore.Enetities;
+using LotteryCore.Data;
 namespace LotteryAdminSystem.Pages.Users
 {
     public class EditModel : PageModel

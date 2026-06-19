@@ -1,3 +1,4 @@
+using LotteryCore.Data;
 using LotteryCore.Enetities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;

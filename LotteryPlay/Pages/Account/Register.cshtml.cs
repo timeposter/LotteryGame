@@ -1,3 +1,4 @@
+using LotteryCore.Data;
 using LotteryCore.Enetities;
 using LotteryPlay.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;

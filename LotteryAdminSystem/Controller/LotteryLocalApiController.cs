@@ -1,6 +1,4 @@
-﻿using LotteryAdminSystem.Data;
-using LotteryCore.Enetities;
-using Microsoft.AspNetCore.Http;
+﻿using LotteryCore.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

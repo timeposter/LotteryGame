@@ -1,3 +1,4 @@
+using LotteryCore.Data;
 using LotteryCore.Enetities;
 using LotteryPlay.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -10,15 +11,15 @@ namespace LotteryPlay.Pages
     public class IndexModel : PageModel
     {
         private readonly AppDBContext _dbContext;
-        public string UserName { get; set; } = string.Empty;
-        public decimal Balance { get; set; }
-
         public IndexModel(AppDBContext dbContext)
         {
             _dbContext = dbContext;
         }
 
+        public decimal Balance { get; set; }
+        public string UserName { get; set; } = string.Empty;
         #region 页面加载 - 登录校验 + 同步存储 UserId 到 Session
+
         public async Task<IActionResult> OnGetAsync()
         {
             var userName = HttpContext.Session.GetString("Username");
@@ -39,9 +40,11 @@ namespace LotteryPlay.Pages
             HttpContext.Session.SetString("UserId", user.Id.ToString());
             return Page();
         }
-        #endregion
+
+        #endregion 页面加载 - 登录校验 + 同步存储 UserId 到 Session
 
         #region 接口：获取所有启用的彩种
+
         public async Task<JsonResult> OnGetGetLotteryList()
         {
             var list = await _dbContext.Lottery
@@ -56,9 +59,11 @@ namespace LotteryPlay.Pages
 
             return new JsonResult(new { code = 1, data = list });
         }
-        #endregion
+
+        #endregion 接口：获取所有启用的彩种
 
         #region 接口：根据彩种ID 获取对应启用玩法
+
         public async Task<JsonResult> OnGetGetPlayList(int lotteryId)
         {
             var list = await _dbContext.PlayConfig
@@ -74,9 +79,11 @@ namespace LotteryPlay.Pages
 
             return new JsonResult(new { code = 1, data = list });
         }
-        #endregion
+
+        #endregion 接口：根据彩种ID 获取对应启用玩法
 
         #region 接口：获取当前期号、倒计时、投注状态（纯读库，不再自动开奖/建期）
+
         public async Task<IActionResult> OnGetCurrentPeriod(int lotId)
         {
             var lotteryConfig = await _dbContext.Lottery.FindAsync(lotId);
@@ -122,8 +129,11 @@ namespace LotteryPlay.Pages
                 status = statusText
             });
         }
-        #endregion
+
+        #endregion 接口：获取当前期号、倒计时、投注状态（纯读库，不再自动开奖/建期）
+
         #region 批量投注接口（适配前端投注列表）
+
         [HttpPost]
         public async Task<IActionResult> OnPostBet(int lotteryId, string period, string betItems)
         {
@@ -219,81 +229,11 @@ namespace LotteryPlay.Pages
                 msg = $"投注成功！共计 {totalAllZhu} 注，总金额 {totalAllMoney} 元"
             });
         }
-        #endregion
+
+        #endregion 批量投注接口（适配前端投注列表）
 
         #region 追号相关接口
-        /// <summary>普通追号（当前期开始追号）</summary>
-        public async Task<IActionResult> OnPostAddTrace(int lotteryId, int playId, string period, string betNum, int multiple, int traceCount)
-        {
-            int uid = Convert.ToInt32(HttpContext.Session.GetString("UserId"));
-            var user = await _dbContext.Users.FindAsync(uid);
-            var lot = await _dbContext.Lottery.FindAsync(lotteryId);
-            var play = await _dbContext.PlayConfig.FindAsync(playId);
-            var nowPer = await _dbContext.LotteryDatas.FirstOrDefaultAsync(w => w.LotteryId == lotteryId && w.PeriodNo == period && w.IsOpen == 0);
 
-            if (user == null) return new JsonResult(new { code = 0, msg = "未登录" });
-            if (nowPer == null || DateTime.Now >= nowPer.EndTime.AddSeconds(-lot.StopBetSecond))
-                return new JsonResult(new { code = 0, msg = "已截止无法追号" });
-
-            int zhu = CalcZhuShu(play.PlayName, betNum);
-            decimal perMoney = zhu * multiple;
-            decimal totalNeed = perMoney * traceCount;
-
-            if (user.Balance < totalNeed)
-                return new JsonResult(new { code = 0, msg = $"余额不足，追号共需{totalNeed}元" });
-
-            user.Balance -= totalNeed;
-
-            UserTrace trace = new UserTrace()
-            {
-                UserId = uid,
-                LotteryId = lotteryId,
-                PlayId = playId,
-                StartPeriod = period,
-                LeftCount = traceCount,
-                TotalCount = traceCount,
-                BetNumber = betNum,
-                Multiple = multiple,
-                PerMoney = perMoney
-            };
-            _dbContext.UserTrace.Add(trace);
-            await _dbContext.SaveChangesAsync();
-
-            UserBet firstBet = new UserBet()
-            {
-                UserId = uid,
-                LotteryId = lotteryId,
-                PlayId = playId,
-                PeriodNo = period,
-                BetNumber = betNum,
-                Multiple = multiple,
-                BetMoney = perMoney,
-                SourceType = 1,
-                TraceId = trace.Id
-            };
-            _dbContext.UserBets.Add(firstBet);
-
-            trace.LeftCount -= 1;
-            await _dbContext.SaveChangesAsync();
-
-            return new JsonResult(new { code = 1, msg = $"追号成功！首期已下单，剩余{trace.LeftCount}期自动追投" });
-        }
-        public async Task<IActionResult> OnGetLotteryHistory(int lotId)
-        {
-            var history = await _dbContext.LotteryDatas
-                .Where(m => m.LotteryId == lotId && m.IsOpen == 1)
-                .OrderByDescending(m => m.CreateTime)
-                .Take(10)
-                .Select(m => new
-                {
-                    period = m.PeriodNo,
-                    openTime = m.OpenTime.HasValue ? m.OpenTime.Value.ToString("HH:mm:ss") : "",
-                    openNumber = m.OpenNumber ?? ""
-                })
-                .ToListAsync();
-
-            return new JsonResult(new { code = 1, data = history });
-        }
         /// <summary>【改造后】获取历史期号 + 投注截止时间（前端列表展示用）</summary>
         public async Task<JsonResult> OnGetGetHistoryPeriod(int lid)
         {
@@ -313,6 +253,23 @@ namespace LotteryPlay.Pages
                 .ToListAsync();
 
             return new JsonResult(list);
+        }
+
+        public async Task<IActionResult> OnGetLotteryHistory(int lotId)
+        {
+            var history = await _dbContext.LotteryDatas
+                .Where(m => m.LotteryId == lotId && m.IsOpen == 1)
+                .OrderByDescending(m => m.CreateTime)
+                .Take(10)
+                .Select(m => new
+                {
+                    period = m.PeriodNo,
+                    openTime = m.OpenTime.HasValue ? m.OpenTime.Value.ToString("HH:mm:ss") : "",
+                    openNumber = m.OpenNumber ?? ""
+                })
+                .ToListAsync();
+
+            return new JsonResult(new { code = 1, data = history });
         }
 
         /// <summary>【重构】历史期追号：支持多期号 + 每期独立倍数</summary>
@@ -382,9 +339,67 @@ namespace LotteryPlay.Pages
                 msg = $"追号创建成功！共创建 {traceAddList.Count} 条追号计划，连续 {traceCount} 期自动追投"
             });
         }
-        #endregion
+
+        /// <summary>普通追号（当前期开始追号）</summary>
+        public async Task<IActionResult> OnPostAddTrace(int lotteryId, int playId, string period, string betNum, int multiple, int traceCount)
+        {
+            int uid = Convert.ToInt32(HttpContext.Session.GetString("UserId"));
+            var user = await _dbContext.Users.FindAsync(uid);
+            var lot = await _dbContext.Lottery.FindAsync(lotteryId);
+            var play = await _dbContext.PlayConfig.FindAsync(playId);
+            var nowPer = await _dbContext.LotteryDatas.FirstOrDefaultAsync(w => w.LotteryId == lotteryId && w.PeriodNo == period && w.IsOpen == 0);
+
+            if (user == null) return new JsonResult(new { code = 0, msg = "未登录" });
+            if (nowPer == null || DateTime.Now >= nowPer.EndTime.AddSeconds(-lot.StopBetSecond))
+                return new JsonResult(new { code = 0, msg = "已截止无法追号" });
+
+            int zhu = CalcZhuShu(play.PlayName, betNum);
+            decimal perMoney = zhu * multiple;
+            decimal totalNeed = perMoney * traceCount;
+
+            if (user.Balance < totalNeed)
+                return new JsonResult(new { code = 0, msg = $"余额不足，追号共需{totalNeed}元" });
+
+            user.Balance -= totalNeed;
+
+            UserTrace trace = new UserTrace()
+            {
+                UserId = uid,
+                LotteryId = lotteryId,
+                PlayId = playId,
+                StartPeriod = period,
+                LeftCount = traceCount,
+                TotalCount = traceCount,
+                BetNumber = betNum,
+                Multiple = multiple,
+                PerMoney = perMoney
+            };
+            _dbContext.UserTrace.Add(trace);
+            await _dbContext.SaveChangesAsync();
+
+            UserBet firstBet = new UserBet()
+            {
+                UserId = uid,
+                LotteryId = lotteryId,
+                PlayId = playId,
+                PeriodNo = period,
+                BetNumber = betNum,
+                Multiple = multiple,
+                BetMoney = perMoney,
+                SourceType = 1,
+                TraceId = trace.Id
+            };
+            _dbContext.UserBets.Add(firstBet);
+
+            trace.LeftCount -= 1;
+            await _dbContext.SaveChangesAsync();
+
+            return new JsonResult(new { code = 1, msg = $"追号成功！首期已下单，剩余{trace.LeftCount}期自动追投" });
+        }
+        #endregion 追号相关接口
 
         #region 共用工具方法：计算注数（直选/组三/组六通用）
+
         private int CalcZhuShu(string playName, string betNum)
         {
             int zhu = 0;
@@ -404,8 +419,11 @@ namespace LotteryPlay.Pages
             }
             return zhu;
         }
-        #endregion
+
+        #endregion 共用工具方法：计算注数（直选/组三/组六通用）
+
         #region 【新增】按规则生成新期号：yyyyMMdd + 3位流水号，每日0点重置001
+
         /// <summary>
         /// 生成新期号
         /// 规则：每日0点从001开始，每5分钟一期，格式 yyyyMMdd + 3位补零序号
@@ -452,7 +470,8 @@ namespace LotteryPlay.Pages
 
             return newPeriodNo;
         }
-        #endregion
+
+        #endregion 【新增】按规则生成新期号：yyyyMMdd + 3位流水号，每日0点重置001
 
         /// <summary>
         /// 获取当前彩种 最新一期开奖结果
@@ -468,7 +487,7 @@ namespace LotteryPlay.Pages
 
             // 2. 查询开奖表：按期号/开奖时间倒序，取最新1条（复用你现有开奖实体）
             var latest = await _dbContext.LotteryDatas
-                .Where(x => x.LotteryId == lotId&&x.IsOpen==1)
+                .Where(x => x.LotteryId == lotId && x.IsOpen == 1)
                 .OrderByDescending(x => x.PeriodNo) // 期号倒序（主流排序方式）
                 .FirstOrDefaultAsync();
 
@@ -490,15 +509,17 @@ namespace LotteryPlay.Pages
         }
 
         #region 前端投注列表对应实体类
+
         public class BetItemDto
         {
+            public string betNum { get; set; } = string.Empty;
+            public string lineMoney { get; set; } = string.Empty;
+            public int multiple { get; set; }
             public int playId { get; set; }
             public string playName { get; set; } = string.Empty;
-            public string betNum { get; set; } = string.Empty;
-            public int multiple { get; set; }
             public decimal singleMoney { get; set; }
-            public string lineMoney { get; set; } = string.Empty;
         }
-        #endregion
+
+        #endregion 前端投注列表对应实体类
     }
 }

@@ -1,4 +1,4 @@
-using LotteryCore.Enetities;
+using LotteryCore.Data;
 using LotteryPlay.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;

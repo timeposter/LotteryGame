@@ -8,7 +8,7 @@
     // 仅登录状态下查询余额
     if (!string.IsNullOrEmpty(userName) && userName != "游客")
     {
-        var dbContext = Context.RequestServices.GetRequiredService<LotteryPlay.Data.AppDbContext>();
+        var dbContext = Context.RequestServices.GetRequiredService<LotteryCore.Data.AppDBContext>();
         var user = dbContext.Users.FirstOrDefault(u => u.Username == userName);
         balance = user?.Balance ?? 0;
     }

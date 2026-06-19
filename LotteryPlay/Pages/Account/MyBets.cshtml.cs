@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using LotteryCore.Enetities;
+using LotteryCore.Data;
 
 namespace LotteryPlay.Pages.Account
 {

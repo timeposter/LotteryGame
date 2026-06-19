@@ -1,6 +1,6 @@
 ﻿using LotteryCore;
+using LotteryCore.Data;
 using LotteryCore.Enetities;
-using LotteryPlay.Data;
 using LotteryPlay.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -28,7 +28,7 @@ namespace LotteryPlay.Services
                 try
                 {
                     using var scope = _scopeFactory.CreateScope();
-                    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    var db = scope.ServiceProvider.GetRequiredService<AppDBContext>();
                     var now = DateTime.Now;
 
                     var categories = await db.LotteryCategories
@@ -105,7 +105,7 @@ namespace LotteryPlay.Services
         /// <summary>
         /// 创建新期号
         /// </summary>
-        private static async Task CreateNewPeriod(AppDbContext db, LotteryCategory cat, CancellationToken ct)
+        private static async Task CreateNewPeriod(AppDBContext db, LotteryCategory cat, CancellationToken ct)
         {
             var lotteryId = cat.LotteryId;
             var last = await db.LotteryDatas
@@ -153,7 +153,7 @@ namespace LotteryPlay.Services
         /// <summary>
         /// 结算当期所有投注
         /// </summary>
-        private static async Task SettleAllBet(AppDbContext db, int lotteryId, string period, string openNum, CancellationToken ct)
+        private static async Task SettleAllBet(AppDBContext db, int lotteryId, string period, string openNum, CancellationToken ct)
         {
             var bets = await db.UserBets
                 .Where(b => b.LotteryId == lotteryId && b.Period == period && !b.IsSettled)

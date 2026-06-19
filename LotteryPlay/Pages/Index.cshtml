@@ -830,6 +830,15 @@
         openTime: "",
         openNum: ""
     };
+        // 彩种ID对应Logo图片映射
+    const lotteryLogoMap = {
+        1: "/img/hnssc.png",    // 河内彩
+        2: "/img/indonesia.png",// 印尼彩
+        3: "/img/xigong.png",   // 西贡彩
+        4: "/img/thai.png",     // 泰国彩
+        5: "/img/pls.png",      // 排列三
+        6: "/img/sd.png"        // 福彩3D
+    };
     // =========================================================================================
 
     $(document).ready(function () {
@@ -849,26 +858,22 @@
             } catch (e) {
                 return dateStr;
             }
-        }
+        };
 
         // 本地倒计时函数
-        function startLocalCountDown() {
-            if (localTimer) clearInterval(localTimer);
-            localTimer = setInterval(function () {
-                if (baseMin == 0 && baseSec == 0) {
-                    $("#countTime").text("00:00");
-                    return;
-                }
-                baseSec--;
-                if (baseSec < 0) {
-                    baseSec = 59;
-                    baseMin--;
-                }
-                let m = String(baseMin).padStart(2, '0');
-                let s = String(baseSec).padStart(2, '0');
-                $("#countTime").text(`${m}:${s}`);
-            }, 1000);
-        }
+            function startLocalCountDown() {
+        if (localTimer) clearInterval(localTimer);
+        localTimer = setInterval(function () {
+            baseSec--;
+            if (baseSec < 0) {
+                baseSec = 59;
+                baseMin--;
+            }
+            let m = String(baseMin).padStart(2, '0');
+            let s = String(baseSec).padStart(2, '0');
+            $("#countTime").text(`${m}:${s}`);
+        }, 1000);
+    };
 
         // 启动最新开奖自动轮询
         function startOpenAutoRefresh() {
@@ -902,16 +907,18 @@
         $('#lotBox').on('click', 'li', function () {
             var id = $(this).data('id');
             currLotteryId = id;
+            // 新增：切换Logo
+                $(".lottery-logo img").attr("src", lotteryLogoMap[currLotteryId]);
+
             var title = $(this).find('span').text();
             $("#lotteryTitle").text(title);
             clearBetList();
             loadPlay(currLotteryId);
             getCurrentPeriod(currLotteryId);
             getHistory(currLotteryId);
-            $("#lotterySelect").val(id);
-            $("#lotteryNav .lottery-nav-item").removeClass("active");
-            $("#lotteryNav .lottery-nav-item[data-id='" + currLotteryId + "']").addClass("active");
             startOpenAutoRefresh();
+            lastOpenData = { period: "", openTime: "", openNum: "" };
+                
         });
 
         // 追号勾选切换
@@ -1203,56 +1210,78 @@
             $("#historyTable tbody").html(html);
         }
 
-        // 加载最新开奖（带请求锁防并发）
-        function loadLatestOpen(lotId) {
-            if (isLoadingOpen) return;
-            isLoadingOpen = true;
+            // 无感刷新核心：数据不变不渲染，更新时淡入淡出平滑切换
+    function loadLatestOpen(lotId) {
+        if (isLoadingOpen) return;
+        isLoadingOpen = true;
 
+        // 仅首次加载显示加载文字，后续轮询空白不闪烁
+        if (lastOpenData.period === "") {
             $("#newOpenData").html('<span style="color:#999;">加载中...</span>');
-            $.get("?handler=LatestOpen&lotId=" + lotId, function (res) {
-                if (res.code === 1) {
-                    if (!res.data) {
-                        $("#newOpenData").html('<span style="color:#999;">暂无开奖记录</span>');
-                        return;
-                    }
-                    let period = res.data.period;
-                    let openTime = res.data.openTime;
-                    let openNum = res.data.openNumber;
-                    let html = `
-                    <div style="margin:2px 0;">
-                        期号：<span style="color:#d81828;font-weight:bold;">${period}</span><br>
-                        开奖时间：${openTime}
-                    </div>
-                    <div style="margin:2px 0;font-size:14px;">
-                        开奖号码：<span style="color:#09c;font-weight:bold;">${openNum}</span>
-                    </div>`;
-                    $("#newOpenData").html(html);
-                } else {
-                    $("#newOpenData").html(`<span style="color:red;">${res.msg}</span>`);
-                }
-            }, "json").fail(function () {
-                $("#newOpenData").html('<span style="color:red;">开奖数据加载失败</span>');
-            }).always(function () {
-                isLoadingOpen = false;
-            });
         }
+
+        $.get("?handler=LatestOpen&lotId=" + lotId, function (res) {
+            if (res.code === 1 && res.data) {
+                let period = res.data.period;
+                let openTime = res.data.openTime;
+                let openNum = res.data.openNum;
+
+                // 对比缓存：开奖完全一样，直接退出，DOM零操作
+                if (
+                    lastOpenData.period === period &&
+                    lastOpenData.openTime === openTime &&
+                    lastOpenData.openNum === openNum
+                ) {
+                    isLoadingOpen = false;
+                    return;
+                }
+
+                // 有新数据：淡出旧内容 → 更新html → 淡入新内容
+                let html = `
+                <div style="margin:2px 0;">
+                    期号：<span style="color:#d81828;font-weight:bold;">${period}</span><br>
+                    开奖时间：${openTime}
+                </div>
+                <div style="margin:2px 0;font-size:14px;">
+                    开奖号码：<span style="color:#09c;font-weight:bold;">${openNum}</span>
+                </div>`;
+
+                $("#newOpenWrap").css("opacity", "0");
+                setTimeout(() => {
+                    $("#newOpenData").html(html);
+                    // 更新缓存记录最新开奖
+                    lastOpenData.period = period;
+                    lastOpenData.openTime = openTime;
+                    lastOpenData.openNum = openNum;
+                    $("#newOpenWrap").css("opacity", "1");
+                }, 300);
+
+            } else {
+                $("#newOpenData").html('<span style="color:#999;">暂无开奖记录</span>');
+            }
+        }, "json").fail(function () {
+            $("#newOpenData").html('<span style="color:red;">开奖数据加载失败</span>');
+        }).always(function () {
+            isLoadingOpen = false;
+        });
+    }
 
         // 获取当前期倒计时数据
-        function getCurrentPeriod(lotId) {
-            $.get("/Index?handler=CurrentPeriod&lotId=" + lotId, function (res) {
-                if (res.code === 1) {
-                    currPeriod = res.period;
-                    $("#currPeriod").text(res.period);
-                    $("#countTime").text(res.countTime);
-                    $("#betStatus").text(res.canBet ? "正常投注" : "已截止");
-                    canBet = res.canBet;
-                    // 拆分时分秒赋值全局倒计时变量
-                    let timeArr = res.countTime.split(":");
-                    baseMin = parseInt(timeArr[0]);
-                    baseSec = parseInt(timeArr[1]);
-                }
-            }, "json");
-        }
+                function getCurrentPeriod(lotId) {
+        $.get("/Index?handler=CurrentPeriod&lotId=" + lotId, function (res) {
+            if (res.code === 1) {
+                currPeriod = res.period;
+                $("#currPeriod").text(res.period);
+                // 删除这行：$("#countTime").text(res.countTime);
+                $("#betStatus").text(res.canBet ? "正常投注" : "已截止");
+                canBet = res.canBet;
+                // 只更新底层分秒变量，不直接渲染页面
+                let timeArr = res.countTime.split(":");
+                baseMin = parseInt(timeArr[0]);
+                baseSec = parseInt(timeArr[1]);
+            }
+        }, "json");
+    }
 
         // 获取历史开奖列表
         function getHistory(lotId) {
@@ -1267,22 +1296,10 @@
         setInterval(function () {
             if (currLotteryId > 0) {
                 getCurrentPeriod(currLotteryId);
-                getHistory(currLotteryId);
             }
         }, 1000);
 
-        // 侧边彩种点击切换
-        $(document).on("click", ".lottery-nav-item", function () {
-            $(".lottery-nav-item").removeClass("active");
-            $(this).addClass("active");
-            currLotteryId = parseInt($(this).data("id"));
-            $("#lotteryTitle").text($(this).text());
-            clearBetList();
-            loadPlay(currLotteryId);
-            getCurrentPeriod(currLotteryId);
-            getHistory(currLotteryId);
-            startOpenAutoRefresh();
-        });
+       
 
         // 玩法按钮切换
         $(document).on("click", ".play-type-group button", function () {
@@ -1480,27 +1497,19 @@
             });
         });
 
-        // 下拉彩种切换
-        $("#lotterySelect").on("change", function () {
-            var id = parseInt($(this).val());
-            currLotteryId = id;
-            var title = $("#lotterySelect option:selected").text();
-            $("#lotteryTitle").text(title);
-            clearBetList();
-            loadPlay(currLotteryId);
-            getCurrentPeriod(currLotteryId);
-            getHistory(currLotteryId);
-
-            $("#lotteryNav .lottery-nav-item").removeClass("active");
-            $("#lotteryNav .lottery-nav-item[data-id='" + currLotteryId + "']").addClass("active");
-            startOpenAutoRefresh();
-        });
-
         // 页面初始化执行
         loadLottery();
         setTimeout(function () {
             $('#lotBox li[data-id="1"]').click();
         }, 200);
+
+        // ========== 此处为 $(document).ready 内部末尾，在这里插入30秒校准定时器 ==========
+        // 每30秒同步一次接口校准倒计时，消除本地计时误差，不闪烁
+        setInterval(function(){
+            if(currLotteryId>0){
+                getCurrentPeriod(currLotteryId);
+            }
+        },30000);
 
         // 页面关闭销毁所有定时器
         $(window).on("beforeunload", function () {

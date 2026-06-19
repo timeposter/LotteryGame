@@ -1,5 +1,5 @@
 ﻿using LotteryAdminSystem.Converter;
-using LotteryAdminSystem.Data;
+using LotteryCore.Data;
 using LotteryCore.Enetities;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;

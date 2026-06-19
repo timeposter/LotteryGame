@@ -1,4 +1,5 @@
 ﻿
+using LotteryCore.Data;
 using LotteryCore.DTO;
 using LotteryCore.Enetities;
 using LotteryCore.Utils;

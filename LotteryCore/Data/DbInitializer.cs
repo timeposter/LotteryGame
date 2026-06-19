@@ -1,8 +1,9 @@
 ﻿using LotteryCore.Enetities;
+using Microsoft.Extensions.DependencyInjection;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace LotteryAdminSystem.Data
+namespace LotteryCore.Data
 {
     public static class DbInitializer
     {
