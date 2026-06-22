@@ -24,20 +24,15 @@ internal class Program
         {
             options.Cookie.IsEssential = true;
             options.IdleTimeout = TimeSpan.FromHours(2);
+            options.Cookie.HttpOnly = true;
             // Cookie 作用域：全站根路径 /，所有子目录都能读取
             options.Cookie.Path = "/";
-            // 会话超时时间（2小时，按需修改）
-            options.IdleTimeout = TimeSpan.FromHours(2);
-            // 兼容浏览器隐私模式
-            options.Cookie.IsEssential = true;
 
         });
 
         // 注册SignalR
         builder.Services.AddSignalR();
 
-        // 注册彩票后台定时轮询服务（核心，解决provider空报错）
-        builder.Services.AddHostedService<LotteryBackgroundService>();
 
         // 注册RazorPages
         builder.Services.AddRazorPages(options =>
@@ -67,12 +62,12 @@ internal class Program
 
         // 静态资源、路由、Session、授权中间件
         app.UseStaticFiles();
-        app.UseRouting();
-
         // 启用跨域
         app.UseSession();
+        app.UseRouting();
         app.UseAuthorization();
-
+        app.UseAuthentication();
+        app.UseAuthorization(); 
         // 路由映射
         app.MapRazorPages();
         //路由注册

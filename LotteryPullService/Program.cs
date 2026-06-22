@@ -61,7 +61,15 @@ namespace LotteryPullService
                 {
                     using var scope = _serviceProvider.CreateScope();
                     var db = scope.ServiceProvider.GetRequiredService<AppDBContext>();
-                    var list = await db.Lottery.Where(x => x.IsEnable&&!string.IsNullOrEmpty(x.ApiCode)).ToListAsync(_cts.Token);
+
+                    // ========== 每日23点生成次日期号逻辑 ==========
+                    var now = DateTime.Now;
+                    // 23点整执行生成，避免重复执行
+                    if (now.Hour == 23 && now.Minute < 5)
+                    {
+                        await GenerateNextDayPeriod(db, _cts.Token);
+                    }
+                    var list = await db.Lottery.Where(x => x.IsEnable&&x.Id==1).ToListAsync(_cts.Token);
                     Log.Debug($"本轮读取启用彩种：{list.Count}个");
 
                     foreach (var lot in list)
@@ -83,6 +91,10 @@ namespace LotteryPullService
             Log.CloseAndFlush();
         }
 
+
+        #region 
+
+        #endregion
         /// 单彩种拉取逻辑（复制你原有逻辑）
         private static async Task PullSingle(Lottery lottery, AppDBContext db, CancellationToken token)
         {
@@ -218,42 +230,58 @@ namespace LotteryPullService
                         }
                     }
                 }
-                //var arr = root.GetProperty("data").GetProperty("awards").EnumerateArray();
-                //foreach (var item in arr)
-                //{
-                //    string period = item.GetProperty("issue").GetString()!;
-                //    string num = item.GetProperty("code").GetString()!;
-                //    DateTime openTime = DateTime.Parse(item.GetProperty("opendate").GetString()!);
-
-                //    var exist = await db.LotteryDatas
-                //        .FirstOrDefaultAsync(d => d.LotteryId == lottery.Id && d.PeriodNo == period, token);
-                //    if (exist == null)
-                //    {
-                //        await db.LotteryDatas.AddAsync(new LotteryData
-                //        {
-                //            LotteryId = lottery.Id,
-                //            PeriodNo = period,
-                //            OpenNumber = num,
-                //            IsOpen = 1,
-                //            OpenTime = openTime,
-                //            EndTime = openTime.AddHours(24),
-                //            CreateTime = DateTime.Now
-                //        }, token);
-                //        Log.Information($"新增 {lottery.LotteryName} {period} {num}");
-                //    }
-                //    else
-                //    {
-                //        exist.OpenNumber = num;
-                //        exist.OpenTime = openTime;
-                //        exist.EndTime = openTime.AddHours(24);
-                //    }
-                //}
-                //await db.SaveChangesAsync(token);
             }
             catch (Exception ex)
             {
                 Log.Error(ex, $"{lottery.LotteryName} 单彩种拉取失败");
             }
+        }
+        /// <summary>
+        /// 生成次日所有5分钟一期期号 yyyyMMdd-0001 ~ yyyyMMdd-0288
+        /// </summary>
+        private static async Task GenerateNextDayPeriod(AppDBContext db, CancellationToken token)
+        {
+            var tomorrow = DateTime.Now.Date.AddDays(1);
+            string dateStr = tomorrow.ToString("yyyyMMdd");
+
+            // 查询该彩种是否已存在次日期号，避免重复生成
+            var allLotteries = await db.Lottery.Where(x => x.IsEnable).ToListAsync(token);
+            foreach (var lot in allLotteries)
+            {
+                bool exist = await db.LotteryDatas.AnyAsync(d =>
+                    d.LotteryId == lot.Id && d.PeriodNo.StartsWith(dateStr), token);
+
+                if (exist)
+                {
+                    Log.Debug($"彩种{lot.LotteryName}次日期号已存在，跳过生成");
+                    continue;
+                }
+
+                // 0点0分开始，每5分钟一期，共288期
+                DateTime currentTime = tomorrow;
+                for (int i = 1; i <= 288; i++)
+                {
+                    string seq = i.ToString("D4"); // 0001、0002...0288
+                    string period = $"{dateStr}-{seq}";
+
+                    var data = new LotteryData
+                    {
+                        LotteryId = lot.Id,
+                        PeriodNo = period,
+                        OpenNumber = null,
+                        IsOpen = 0, // 待开奖
+                        OpenTime = currentTime,
+                        EndTime = currentTime.AddSeconds(-10), // 提前10秒封盘
+                        CreateTime = DateTime.Now
+                    };
+                    await db.LotteryDatas.AddAsync(data, token);
+
+                    // 每次+5分钟
+                    currentTime = currentTime.AddMinutes(5);
+                }
+                Log.Information($"成功生成{lot.LotteryName}次日{dateStr}全部288条期号");
+            }
+            await db.SaveChangesAsync(token);
         }
     }
 }

@@ -158,12 +158,5 @@
                 _ => false
             };
         }
-
-        /// <summary>生成5位随机开奖号</summary>
-        public static string GenerateOpenNumber()
-        {
-            var rnd = new Random();
-            return $"{rnd.Next(0, 10)}{rnd.Next(0, 10)}{rnd.Next(0, 10)}{rnd.Next(0, 10)}{rnd.Next(0, 10)}";
-        }
     }
 }

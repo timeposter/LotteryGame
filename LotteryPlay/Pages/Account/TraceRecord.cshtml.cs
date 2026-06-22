@@ -18,13 +18,14 @@ namespace LotteryPlay.Pages.Account
 
         public async Task OnGetAsync()
         {
-            if (!int.TryParse(HttpContext.Session.GetString("UserId"), out int uid))
+            var UserIdStr = HttpContext.Session.GetInt32("UserId");
+            if (!UserIdStr.HasValue)
             {
                 Response.Redirect("/Account/Login");
                 return;
             }
             List = await _db.UserTrace
-                .Where(w => w.UserId == uid)
+                .Where(w => w.UserId == UserIdStr)
                 .OrderByDescending(o => o.CreateTime)
                 .ToListAsync();
         }
@@ -32,15 +33,16 @@ namespace LotteryPlay.Pages.Account
         /// <summary>终止追号接口</summary>
         public async Task<JsonResult> OnPostStopTrace(int traceId)
         {
-            if (!int.TryParse(HttpContext.Session.GetString("UserId"), out int uid))
+            var UserIdStr = HttpContext.Session.GetInt32("UserId");
+            if (!UserIdStr.HasValue||UserIdStr<=0)
                 return new JsonResult(new { code = 0, msg = "请登录" });
 
-            var trace = await _db.UserTrace.FirstOrDefaultAsync(w => w.Id == traceId && w.UserId == uid);
+            var trace = await _db.UserTrace.FirstOrDefaultAsync(w => w.Id == traceId && w.UserId == UserIdStr);
             if (trace == null || trace.Status == 1)
                 return new JsonResult(new { code = 0, msg = "数据不存在或已终止" });
 
             //剩余金额退回用户
-            var user = await _db.Users.FindAsync(uid);
+            var user = await _db.Users.FindAsync(UserIdStr);
             decimal refundMoney = trace.LeftCount * trace.PerMoney;
             user.Balance += refundMoney;
 

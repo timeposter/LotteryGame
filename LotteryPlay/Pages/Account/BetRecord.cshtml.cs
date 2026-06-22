@@ -39,9 +39,9 @@ namespace LotteryPlay.Pages.Account
         public async Task<IActionResult> OnGetAsync()
         {
             // ========== 1. 登录校验 ==========
-            var userIdStr = HttpContext.Session.GetString("UserId");
+            var userIdStr = HttpContext.Session.GetInt32("UserId");
             var userName = HttpContext.Session.GetString("Username");
-            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId) || userId <= 0)
+            if ((!userIdStr.HasValue) || userIdStr <= 0)
             {
                 // 未登录，跳转到登录页
                 return RedirectToPage("/Account/Login");
@@ -51,7 +51,7 @@ namespace LotteryPlay.Pages.Account
             var query = _dbContext.UserBets
                 .Include(b => b.Play)          // 联查玩法配置
                 .ThenInclude(p => p.Lottery)   // 联查彩种
-                .Where(b => b.UserId == userId); // 权限：只能查看自己的记录
+                .Where(b => b.UserId == userIdStr); // 权限：只能查看自己的记录
 
             // 按 中奖状态 筛选
             switch (FilterType)

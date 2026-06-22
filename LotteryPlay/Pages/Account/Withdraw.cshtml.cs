@@ -38,16 +38,16 @@ namespace LotteryPlay.Pages.Account
         {
             // 登录校验
             // ========== 1. 登录校验 ==========
-            var userIdStr = HttpContext.Session.GetString("UserId");
+            var userIdStr = HttpContext.Session.GetInt32("UserId");
             var userName = HttpContext.Session.GetString("Username");
-            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId) || userId <= 0)
+            if (!userIdStr.HasValue || userIdStr<=0)
             {
                 // 未登录，跳转到登录页
                 return RedirectToPage("/Account/Login");
             }
 
             // 读取用户余额
-            var user = await _db.Users.FindAsync(userId);
+            var user = await _db.Users.FindAsync(userIdStr);
             Balance = user?.Balance ?? 0;
             return Page();
         }
@@ -56,15 +56,15 @@ namespace LotteryPlay.Pages.Account
         public async Task<IActionResult> OnPostAsync()
         {
             // ========== 1. 登录校验 ==========
-            var userIdStr = HttpContext.Session.GetString("UserId");
+            var userIdStr = HttpContext.Session.GetInt32("UserId");
             var userName = HttpContext.Session.GetString("Username");
-            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId) || userId <= 0)
+            if (!userIdStr.HasValue ||userIdStr<= 0)
             {
                 // 未登录，跳转到登录页
                 return RedirectToPage("/Account/Login");
             }
 
-            var user = await _db.Users.FindAsync(userId);
+            var user = await _db.Users.FindAsync(userIdStr);
             if (user == null)
             {
                 Msg = "账号异常，请重新登录";
@@ -116,7 +116,7 @@ namespace LotteryPlay.Pages.Account
                 var withdrawOrder = new WithdrawOrder
                 {
                     OrderNo = orderNo,
-                    UserId = userId,
+                    UserId = userIdStr.Value,
                     UserName = userName,
                     Money = Money,
                     ChainType = ChainType,
@@ -136,7 +136,7 @@ namespace LotteryPlay.Pages.Account
                 // 7. 写入资金流水（Type=2 代表提款）
                 _db.UserFundLogs.Add(new UserFundLog
                 {
-                    UserId = userId,
+                    UserId = userIdStr.Value,
                     UserName = userName,
                     Type = 2,
                     Money = Money,

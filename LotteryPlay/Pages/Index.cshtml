@@ -577,6 +577,40 @@
         height: calc(100% - 40px);
         border: none;
     }
+    /* 右侧双客服悬浮按钮组 */
+    .float-kf-group {
+        position: fixed;
+        right: 20px;
+        bottom: 80px;
+        z-index: 999;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .float-kf-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        color: #fff;
+        text-align: center;
+        line-height: 50px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 12px;
+    }
+
+    .tg-btn {
+        background: #26A5E4;
+    }
+
+    .qq-btn {
+        background: #12B7F5;
+    }
+
+    .float-kf-btn:hover {
+        opacity: 0.85;
+    }
 </style>
 <div class="lot-header">
     <div class="lottery-nav">
@@ -586,15 +620,15 @@
                 <span>河内彩</span>
             </li>
             <li data-id="2">
-                <img src="/img/hnssc.png" width="65" />
+                <img src="/img/ync.png" width="65" />
                 <span>印尼彩</span>
             </li>
             <li data-id="3">
-                <img src="/img/hnssc.png" width="65" />
+                <img src="/img/xgc.png" width="65" />
                 <span>西贡彩</span>
             </li>
             <li data-id="4">
-                <img src="/img/hnssc.png" width="65" />
+                <img src="/img/tgc.png" width="65" />
                 <span>泰国彩</span>
             </li>
             <li data-id="5">
@@ -672,7 +706,7 @@
                         }
                     </select>
 
-                    <label style="margin-left:15px;"><input type="checkbox" id="chkTrace"> 开启历史期追号</label>
+                    <label style="margin-left:15px;"><input type="checkbox" id="chkTrace"> 开启追号</label>
 
                     <!-- 原有单次投注按钮 隐藏 -->
                     <button class="submit-btn" id="btnBet">当期投注</button>
@@ -719,7 +753,7 @@
                 </div>
                 <!-- ========== 【核心改造】追号列表区域（表格版） ========== -->
                 <div id="traceBox">
-                    <p class="trace-tip">勾选需要追号的历史期，可单独设置每期倍数，金额自动计算</p>
+                    <p class="trace-tip">勾选需要追号的期，可单独设置每期倍数，金额自动计算</p>
                     <table class="trace-table">
                         <thead>
                             <tr>
@@ -730,7 +764,7 @@
                         </thead>
                         <tbody id="historyPeriodBox">
                             <tr>
-                                <td colspan="3" style="color:#999;">正在加载历史期号...</td>
+                                <td colspan="3" style="color:#999;">正在加载期号...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -780,15 +814,12 @@
     </div>
 </div>
 
-<!-- 在线客服悬浮 -->
-<div class="kf-float" id="openKf">客服</div>
-<div class="kf-box" id="kfBox">
-    <div class="kf-title">在线客服</div>
-    <div class="kf-content" id="kfMsg"></div>
-    <div class="kf-input">
-        <input type="text" id="kfText" placeholder="输入消息">
-        <button id="sendKf">发送</button>
-    </div>
+<!-- 双客服悬浮按钮 -->
+<div class="float-kf-group">
+    <!-- Telegram客服 -->
+    <a class="float-kf-btn tg-btn" href="https://t.me/你的TG账号" target="_blank">TG客服</a>
+    <!-- QQ客服 -->
+    <a class="float-kf-btn qq-btn" href="https://wpa.qq.com/msgrd?v=3&uin=你的QQ号&site=qq&menu=yes" target="_blank">QQ客服</a>
 </div>
 <!-- 调试弹窗 遮罩 + 主体 -->
 <div class="debug-mask" id="debugMask"></div>
@@ -816,10 +847,6 @@
     var isLoadingOpen = false;
     const OPEN_REFRESH_DELAY = 5000;
 
-    // 页面倒计时定时器
-    var localTimer = null;
-    var baseMin = 0;
-    var baseSec = 0;
 
     // 投注列表全局配置
     const singleUnitMoney = 1.00;
@@ -833,12 +860,16 @@
         // 彩种ID对应Logo图片映射
     const lotteryLogoMap = {
         1: "/img/hnssc.png",    // 河内彩
-        2: "/img/indonesia.png",// 印尼彩
-        3: "/img/xigong.png",   // 西贡彩
-        4: "/img/thai.png",     // 泰国彩
+        2: "/img/ync.png",// 印尼彩
+        3: "/img/xgc.png",   // 西贡彩
+        4: "/img/tgc.png",     // 泰国彩
         5: "/img/pls.png",      // 排列三
         6: "/img/sd.png"        // 福彩3D
     };
+        // 服务器开奖目标时间戳（毫秒）
+    var targetOpenTs = 0;
+    // 渲染帧ID，用于取消平滑倒计时
+    var countDownFrameId = null;
     // =========================================================================================
 
     $(document).ready(function () {
@@ -860,20 +891,46 @@
             }
         };
 
-        // 本地倒计时函数
-            function startLocalCountDown() {
-        if (localTimer) clearInterval(localTimer);
-        localTimer = setInterval(function () {
-            baseSec--;
-            if (baseSec < 0) {
-                baseSec = 59;
-                baseMin--;
-            }
-            let m = String(baseMin).padStart(2, '0');
-            let s = String(baseSec).padStart(2, '0');
-            $("#countTime").text(`${m}:${s}`);
-        }, 1000);
-    };
+            // 基于服务器时间戳 平滑实时渲染倒计时（无setInterval抖动）
+            function renderCountDown() {
+        if(targetOpenTs <= 0){
+            $("#countTime").text("--:--");
+            countDownFrameId = requestAnimationFrame(renderCountDown);
+            return;
+        }
+        let nowTs = Date.now();
+        let diffMs = targetOpenTs - nowTs;
+
+        if(diffMs <= 0){
+            $("#countTime").text("00:00");
+            // 开奖结束，主动拉取最新一期数据，刷新期号+新的开奖时间戳
+            getCurrentPeriod(currLotteryId);
+            getHistory(currLotteryId);
+            loadLatestOpen(currLotteryId);
+            // 不return，继续维持渲染循环，等待新targetOpenTs赋值
+            countDownFrameId = requestAnimationFrame(renderCountDown);
+            return;
+        }
+
+        let totalSec = Math.floor(diffMs / 1000);
+        let min = Math.floor(totalSec / 60);
+        let sec = totalSec % 60;
+
+        let m = String(min).padStart(2,"0");
+        let s = String(sec).padStart(2,"0");
+        $("#countTime").text(`${m}:${s}`);
+
+        countDownFrameId = requestAnimationFrame(renderCountDown);
+    }
+
+    // 初始化启动平滑倒计时
+    function initCountDownRender() {
+        // 先停止旧帧
+        if(countDownFrameId){
+            cancelAnimationFrame(countDownFrameId);
+        }
+        renderCountDown();
+    }
 
         // 启动最新开奖自动轮询
         function startOpenAutoRefresh() {
@@ -918,8 +975,9 @@
             getHistory(currLotteryId);
             startOpenAutoRefresh();
             lastOpenData = { period: "", openTime: "", openNum: "" };
-                
-        });
+                 initCountDownRender();
+            });
+            
 
         // 追号勾选切换
         $("#chkTrace").change(function () {
@@ -1126,9 +1184,10 @@
                     loadPlay(currLotteryId);
                     getCurrentPeriod(currLotteryId);
                     getHistory(currLotteryId);
-                    startLocalCountDown();
+                    
                     startOpenAutoRefresh();
-                } else {
+    initCountDownRender();
+} else {
                     $("#playGroup").html("<p style='color:red;margin:0;'>未获取到彩种数据，请检查接口</p>");
                 }
             }, "json").fail(function () {
@@ -1224,7 +1283,7 @@
             if (res.code === 1 && res.data) {
                 let period = res.data.period;
                 let openTime = res.data.openTime;
-                let openNum = res.data.openNum;
+                    let openNum = res.data.openNumber;
 
                 // 对比缓存：开奖完全一样，直接退出，DOM零操作
                 if (
@@ -1267,18 +1326,18 @@
     }
 
         // 获取当前期倒计时数据
-                function getCurrentPeriod(lotId) {
+          function getCurrentPeriod(lotId) {
         $.get("/Index?handler=CurrentPeriod&lotId=" + lotId, function (res) {
             if (res.code === 1) {
                 currPeriod = res.period;
                 $("#currPeriod").text(res.period);
-                // 删除这行：$("#countTime").text(res.countTime);
                 $("#betStatus").text(res.canBet ? "正常投注" : "已截止");
                 canBet = res.canBet;
-                // 只更新底层分秒变量，不直接渲染页面
-                let timeArr = res.countTime.split(":");
-                baseMin = parseInt(timeArr[0]);
-                baseSec = parseInt(timeArr[1]);
+
+                // 核心：只更新服务器开奖时间戳，不直接渲染倒计时
+                targetOpenTs = res.targetOpenTs;
+                    // 拉取到新时间戳，重置渲染
+                initCountDownRender();
             }
         }, "json");
     }
@@ -1291,15 +1350,6 @@
                 }
             }, "json");
         }
-
-        // 全局定时刷新当期期号、历史开奖
-        setInterval(function () {
-            if (currLotteryId > 0) {
-                getCurrentPeriod(currLotteryId);
-            }
-        }, 1000);
-
-       
 
         // 玩法按钮切换
         $(document).on("click", ".play-type-group button", function () {
@@ -1513,12 +1563,14 @@
 
         // 页面关闭销毁所有定时器
         $(window).on("beforeunload", function () {
-            if (localTimer) {
-                clearInterval(localTimer);
-            }
-            if (openRefreshTimer) {
-                clearInterval(openRefreshTimer);
-            }
+            
+                // 销毁倒计时渲染帧
+        if(countDownFrameId){
+            cancelAnimationFrame(countDownFrameId);
+        }
+        if (openRefreshTimer) {
+            clearInterval(openRefreshTimer);
+        }
         });
     });
 

@@ -34,7 +34,7 @@
         border: 1px solid #eee;
         padding: 20px;
         border-radius: 6px;
-        text-align:center;
+        text-align: center;
     }
 
     .item {
@@ -152,8 +152,9 @@
         <div class="msg">@Model.Msg</div>
     }
 
-    <!-- 充值表单 -->
-    <form method="post" id="rechargeForm">
+    <!-- 充值表单 修复：增加asp-page与防伪令牌 -->
+    <form method="post" id="rechargeForm" asp-page="./Recharge">
+        @Html.AntiForgeryToken()
         <div class="item">
             <label>充值金额(USDT)：</label>
             <input type="number" min="1" step="0.01" asp-for="Money" placeholder="请输入充值金额" required />
@@ -239,22 +240,21 @@
             // 赋值订单号，开启轮询
             @if (!string.IsNullOrEmpty(Model.OrderNo))
             {
-                    <text>
-                        currentOrderNo = "@Model.OrderNo";
-                        // 二维码加载异常监听
-                        $("#qrcodeImg").on("error", function () {
-                            $(this).parent().html('<span class="qrcode-tip">二维码加载异常，请刷新重试</span>');
-                        });
-                        // 5秒轮询一次订单状态
-                        setInterval(queryOrderStatus, 5000);
-                    </text>
+                        <text>
+                            currentOrderNo = "@Model.OrderNo";
+                            // 二维码加载异常监听
+                            $("#qrcodeImg").on("error", function () {
+                                $(this).parent().html('<span class="qrcode-tip">二维码加载异常，请刷新重试</span>');
+                            });
+                            // 5秒轮询一次订单状态
+                            setInterval(queryOrderStatus, 5000);
+                        </text>
             }
         });
 
         // 轮询查询订单支付状态
         function queryOrderStatus() {
             if (!currentOrderNo) return;
-            // Razor Pages Handler 标准请求地址
             $.get("/Account/Recharge?handler=CheckPayStatus&orderNo=" + currentOrderNo, function (res) {
                 if (res.code === 1) {
                     alert(res.msg);
