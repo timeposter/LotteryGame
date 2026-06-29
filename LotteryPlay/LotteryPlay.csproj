@@ -18,4 +18,10 @@
     <ProjectReference Include="..\LotteryCore\LotteryCore.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\DeBug.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

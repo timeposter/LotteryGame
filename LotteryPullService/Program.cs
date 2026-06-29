@@ -62,13 +62,13 @@ namespace LotteryPullService
                     using var scope = _serviceProvider.CreateScope();
                     var db = scope.ServiceProvider.GetRequiredService<AppDBContext>();
 
-                    // ========== 每日23点生成次日期号逻辑 ==========
-                    var now = DateTime.Now;
-                    // 23点整执行生成，避免重复执行
-                    if (now.Hour == 23 && now.Minute < 5)
-                    {
-                        await GenerateNextDayPeriod(db, _cts.Token);
-                    }
+                    //// ========== 每日23点生成次日期号逻辑 ==========
+                    //var now = DateTime.Now;
+                    //// 23点整执行生成，避免重复执行
+                    //if (now.Hour == 23 && now.Minute < 5)
+                    //{
+                    //    await GenerateNextDayPeriod(db, _cts.Token);
+                    //}
                     var list = await db.Lottery.Where(x => x.IsEnable&&x.Id==1).ToListAsync(_cts.Token);
                     Log.Debug($"本轮读取启用彩种：{list.Count}个");
 
@@ -108,7 +108,8 @@ namespace LotteryPullService
                     return;
                 }
 
-                var doc = System.Text.Json.JsonDocument.Parse(json);
+                var doc = JsonDocument.Parse(json);
+                Log.Debug($"{lottery.LotteryName} 接口返回：{json}");
                 var root = doc.RootElement;
                 if (root.GetProperty("code").GetInt32() != 0)
                 {
@@ -126,7 +127,7 @@ namespace LotteryPullService
                     var lotteryInfo = apiData.lottery;
                     if (lotteryInfo.status != "open")
                     {
-                        //_logger.LogInformation("彩种[{0}]接口状态非open，暂时跳过", lottery.LotteryName);
+                        Log.Information("彩种[{0}]接口状态非open，暂时跳过", lottery.LotteryName);
                         return;
                     }
 
@@ -148,7 +149,7 @@ namespace LotteryPullService
                     var currentIssueEntity = await db.LotteryDatas
                         .FirstOrDefaultAsync(d => d.LotteryId == lottery.Id && d.PeriodNo == currentIssueNo, token);
 
-                    if (currentIssueEntity == null)
+                    if (currentIssueEntity == null && !currentIssueNo.EndsWith("289"))
                     {
                         currentIssueEntity = new LotteryData
                         {
@@ -160,7 +161,7 @@ namespace LotteryPullService
                             CreateTime = now
                         };
                         db.LotteryDatas.Add(currentIssueEntity);
-                        //_logger.LogInformation("【{0}】新增待开奖期号：{1}", lottery.LotteryName, currentIssueNo);
+                        Log.Debug("【{0}】新增待开奖期号：{1}", lottery.LotteryName, currentIssueNo);
                     }
                     else
                     {
@@ -182,7 +183,7 @@ namespace LotteryPullService
                             awardOpenDt = awardDt;
                         }
 
-                        if (existAward == null)
+                        if (existAward == null&& !awardItem.issue.EndsWith("289"))
                         {
                             existAward = new LotteryData
                             {

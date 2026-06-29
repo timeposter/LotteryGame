@@ -13,10 +13,16 @@ internal class Program
         // 注册数据库上下文 MySQL
         builder.Services.AddDbContext<AppDBContext>(options =>
         {
-            options.UseMySql(
-                builder.Configuration.GetConnectionString("DefaultConnection"),
-                ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))
-            );
+            var connStr = builder.Configuration.GetConnectionString("DefaultConnection");
+            options.UseMySql(connStr, ServerVersion.AutoDetect(connStr), mysqlOpt =>
+            {
+                // 开启连接自动重连
+                mysqlOpt.EnableRetryOnFailure(
+                    maxRetryCount: 3,       // 失败重试3次
+                    maxRetryDelay: TimeSpan.FromSeconds(2),
+                    errorNumbersToAdd: null
+                );
+            });
         });
 
         // 注册Session

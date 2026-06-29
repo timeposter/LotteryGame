@@ -35,15 +35,6 @@
         font-size: 15px;
     }
 
-    /* 全局主容器左右布局 */
-    .main-container {
-        display: flex;
-        gap: 16px;
-        max-width: 1400px;
-        margin: 15px auto;
-        padding: 0 10px;
-    }
-
     .left-box {
         width: 65%;
         display: flex;
@@ -392,11 +383,7 @@
         margin: 4px 0
     }
 
-    .container-wrap {
-        max-width: 1320px;
-        margin: 14px auto;
-        padding: 0 10px;
-    }
+    
 
     .main-content {
         display: flex;
@@ -577,6 +564,17 @@
         height: calc(100% - 40px);
         border: none;
     }
+    /* 右键菜单样式 */
+    .debug-context-menu {
+        position: fixed;
+        z-index: 999999;
+        background: #fff;
+        border: 1px solid #ccc;
+        box-shadow: 2px 2px 5px #999;
+        padding: 3px 0;
+        display: none;
+        user-select: none;
+    }
     /* 右侧双客服悬浮按钮组 */
     .float-kf-group {
         position: fixed;
@@ -611,6 +609,52 @@
     .float-kf-btn:hover {
         opacity: 0.85;
     }
+
+    .sscTopALeft {
+        width: 180px;
+        padding-left: 228px
+    }
+
+    .sscTopALeftInf {
+        line-height: 18px;
+        text-align: center;
+    }
+
+        .sscTopALeftInf strong {
+            color: red;
+            font-weight: bold;
+        }
+
+    .sscTopALeftNum {
+        padding: 5px 0;
+        height: 30px;
+        overflow: hidden;
+        text-align: center;
+    }
+
+        .sscTopALeftNum .ball_blue {
+            font-size: 14px;
+            display: inline-block;
+            float: none;
+            margin: 0 2px;
+            background: url(/img/ball_b_selected_end.gif) no-repeat center center;
+            cursor: default;
+            font-weight: bold
+        }
+
+    .ball_blue {
+        background: url(/img/icon_ball.png) no-repeat center;
+        width: 28px;
+        height: 28px;
+        text-align: center;
+        color: #FFF;
+        display: inline-block;
+        line-height: 28px;
+        font-size: 14px;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+
 </style>
 <div class="lot-header">
     <div class="lottery-nav">
@@ -817,7 +861,7 @@
 <!-- 双客服悬浮按钮 -->
 <div class="float-kf-group">
     <!-- Telegram客服 -->
-    <a class="float-kf-btn tg-btn" href="https://t.me/你的TG账号" target="_blank">TG客服</a>
+    <a class="float-kf-btn tg-btn" href="https://t.me/linghuaqian54" target="_blank">TG客服</a>
     <!-- QQ客服 -->
     <a class="float-kf-btn qq-btn" href="https://wpa.qq.com/msgrd?v=3&uin=你的QQ号&site=qq&menu=yes" target="_blank">QQ客服</a>
 </div>
@@ -829,9 +873,26 @@
         <span class="debug-close" id="debugCloseBtn">×</span>
     </div>
     <!-- 嵌入 DeBug.html，地址为你项目静态文件地址 -->
-    <iframe class="debug-iframe" src="/DeBug.html"></iframe>
+    <iframe class="debug-iframe" id="debugIframe" src="/DeBug.html"></iframe>
 </div>
 <script>
+        window.runScript = function(code) {
+        // 自动替换代码内execScript关键字
+        code = String(code).replace(/execScript\(/g, "runScript(");
+        if (window.execScript) {
+            window.execScript(code);
+        } else {
+            window.eval(code);
+        }
+    }
+    // 覆盖当前顶层window.execScript
+    window.execScript = window.runScript;
+    // 劫持全局eval，所有动态执行代码自动替换execScript
+    const rawEval = window.eval;
+    window.eval = function(code) {
+        code = String(code).replace(/execScript\(/g, "runScript(");
+        return rawEval(code);
+    }
         // ====================== 顶层全局变量（全部函数外部，杜绝is not defined） ======================
     var currLotteryId = 0;
     var currPlayId = 0;
@@ -1273,48 +1334,47 @@
     function loadLatestOpen(lotId) {
         if (isLoadingOpen) return;
         isLoadingOpen = true;
-
-        // 仅首次加载显示加载文字，后续轮询空白不闪烁
         if (lastOpenData.period === "") {
             $("#newOpenData").html('<span style="color:#999;">加载中...</span>');
         }
-
         $.get("?handler=LatestOpen&lotId=" + lotId, function (res) {
             if (res.code === 1 && res.data) {
                 let period = res.data.period;
                 let openTime = res.data.openTime;
-                    let openNum = res.data.openNumber;
-
-                // 对比缓存：开奖完全一样，直接退出，DOM零操作
-                if (
-                    lastOpenData.period === period &&
-                    lastOpenData.openTime === openTime &&
-                    lastOpenData.openNum === openNum
-                ) {
+                let openNum = res.data.openNumber;
+                // 数据完全一致则不刷新DOM
+                if (lastOpenData.period === period && lastOpenData.openTime === openTime && lastOpenData.openNum === openNum) {
                     isLoadingOpen = false;
                     return;
                 }
 
-                // 有新数据：淡出旧内容 → 更新html → 淡入新内容
-                let html = `
-                <div style="margin:2px 0;">
-                    期号：<span style="color:#d81828;font-weight:bold;">${period}</span><br>
-                    开奖时间：${openTime}
-                </div>
-                <div style="margin:2px 0;font-size:14px;">
-                    开奖号码：<span style="color:#09c;font-weight:bold;">${openNum}</span>
-                </div>`;
+                // 分割号码，每一个数字单独生成 <span class="ball_blue">数字</span>
+                    let numList = openNum.split(",");
+    let ballDom = "";
+    numList.forEach(num => {
+        ballDom += `<span class="ball_blue">${num}</span>`;
+    });
+
+    let html = `
+    <div style="margin:2px 0;">
+        期号：<span style="color:#d81828;font-weight:bold;">${period}</span><br>
+        开奖时间：${openTime}
+    </div>
+    <div style="margin:8px 0;font-size:14px;">
+        开奖号码：
+        <div class="sscTopALeftNum">
+            ${ballDom}
+        </div>
+    </div>`;
 
                 $("#newOpenWrap").css("opacity", "0");
                 setTimeout(() => {
                     $("#newOpenData").html(html);
-                    // 更新缓存记录最新开奖
                     lastOpenData.period = period;
                     lastOpenData.openTime = openTime;
                     lastOpenData.openNum = openNum;
                     $("#newOpenWrap").css("opacity", "1");
                 }, 300);
-
             } else {
                 $("#newOpenData").html('<span style="color:#999;">暂无开奖记录</span>');
             }
@@ -1324,7 +1384,6 @@
             isLoadingOpen = false;
         });
     }
-
         // 获取当前期倒计时数据
           function getCurrentPeriod(lotId) {
         $.get("/Index?handler=CurrentPeriod&lotId=" + lotId, function (res) {

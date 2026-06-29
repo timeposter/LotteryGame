@@ -97,7 +97,7 @@ namespace LotteryPlay.Pages
             // 只查询：当前最新【未开奖】期（IsOpen = 0）
             var current = await _dbContext.LotteryDatas
                 .Where(m => m.LotteryId == lotId && m.IsOpen == 0)
-                .OrderByDescending(m => m.CreateTime)
+                .OrderBy(m => m.OpenTime)
                 .FirstOrDefaultAsync();
 
             // 数据库暂无待开奖期

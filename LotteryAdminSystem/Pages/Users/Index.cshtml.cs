@@ -1,4 +1,3 @@
-using LotteryAdminSystem.Data;
 using LotteryCore.Data;
 using LotteryCore.Enetities;
 using Microsoft.AspNetCore.Mvc;
