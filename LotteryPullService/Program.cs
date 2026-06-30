@@ -149,19 +149,23 @@ namespace LotteryPullService
                     var currentIssueEntity = await db.LotteryDatas
                         .FirstOrDefaultAsync(d => d.LotteryId == lottery.Id && d.PeriodNo == currentIssueNo, token);
 
-                    if (currentIssueEntity == null && !currentIssueNo.EndsWith("289"))
+                    if (currentIssueEntity == null)
                     {
-                        currentIssueEntity = new LotteryData
+                        if (!currentIssueNo.EndsWith("289"))
                         {
-                            LotteryId = lottery.Id,
-                            PeriodNo = currentIssueNo,
-                            EndTime = endBetTime,
-                            OpenTime = currentOpenTime,
-                            IsOpen = 0,
-                            CreateTime = now
-                        };
-                        db.LotteryDatas.Add(currentIssueEntity);
-                        Log.Debug("【{0}】新增待开奖期号：{1}", lottery.LotteryName, currentIssueNo);
+                            currentIssueEntity = new LotteryData
+                            {
+                                LotteryId = lottery.Id,
+                                PeriodNo = currentIssueNo,
+                                EndTime = endBetTime,
+                                OpenTime = currentOpenTime,
+                                IsOpen = 0,
+                                CreateTime = now
+                            };
+                            db.LotteryDatas.Add(currentIssueEntity);
+                            Log.Debug("【{0}】新增待开奖期号：{1}", lottery.LotteryName, currentIssueNo);
+
+                        }
                     }
                     else
                     {
@@ -183,19 +187,22 @@ namespace LotteryPullService
                             awardOpenDt = awardDt;
                         }
 
-                        if (existAward == null&& !awardItem.issue.EndsWith("289"))
+                        if (existAward == null)
                         {
-                            existAward = new LotteryData
+                            if (!awardItem.issue.EndsWith("289"))
                             {
-                                LotteryId = lottery.Id,
-                                PeriodNo = awardItem.issue,
-                                OpenNumber = awardItem.code,
-                                EndTime = now,
-                                OpenTime = awardOpenDt,
-                                IsOpen = 1,
-                                CreateTime = now
-                            };
-                            db.LotteryDatas.Add(existAward);
+                                existAward = new LotteryData
+                                {
+                                    LotteryId = lottery.Id,
+                                    PeriodNo = awardItem.issue,
+                                    OpenNumber = awardItem.code,
+                                    EndTime = now,
+                                    OpenTime = awardOpenDt,
+                                    IsOpen = 1,
+                                    CreateTime = now
+                                };
+                                db.LotteryDatas.Add(existAward);
+                            }
                         }
                         else
                         {
