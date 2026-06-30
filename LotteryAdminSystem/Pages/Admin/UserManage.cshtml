@@ -8,7 +8,8 @@
     <h4>会员用户管理</h4>
     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">新增会员</button>
 </div>
-
+@* 防伪令牌必须存在 *@
+@Html.AntiForgeryToken()
 <table class="table table-bordered table-striped">
     <thead>
         <tr>
@@ -27,14 +28,153 @@
             <tr>
                 <td>@u.Id</td>
                 <td>@u.Username</td>
-                <td>@(u.RealName ?? "-")</td>
+                <td>@(string.IsNullOrEmpty(u.RealName) ? "-" : u.RealName)</td>
                 <td>@u.Balance.ToString("F2")</td>
-                <td>@(u.QQ ?? "-")</td>
+                <td>@(string.IsNullOrEmpty(u.QQ) ? "-" : u.QQ)</td>
                 <td>@u.CreateTime</td>
                 <td>
-                    <button class="btn btn-sm btn-warning">编辑</button>
+                    <button class="btn btn-sm btn-warning edit-btn"
+                            data-id="@u.Id"
+                            data-username="@u.Username"
+                            data-realname="@(u.RealName ?? "")"
+                            data-balance="@u.Balance"
+                            data-qq="@(u.QQ ?? "")"
+                            data-bs-toggle="modal"
+                            data-bs-target="#editUserModal">
+                        编辑
+                    </button>
                 </td>
             </tr>
         }
     </tbody>
 </table>
+
+<!-- 新增会员弹窗 -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">新增会员</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-secondary">新增会员表单待开发</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button class="btn btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑会员弹窗（余额修改核心） -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">编辑会员信息</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editUserId">
+
+                <div class="mb-3">
+                    <label class="form-label">用户名</label>
+                    <input type="text" class="form-control" id="editUsername" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">真实姓名</label>
+                    <input type="text" class="form-control" id="editRealName">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">账户余额 <span class="text-danger">（可修改）</span></label>
+                    <input type="number" step="0.01" min="0" class="form-control" id="editBalance" placeholder="0.00">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">QQ</label>
+                    <input type="text" class="form-control" id="editQQ">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button class="btn btn-success" id="saveEditBtn">保存修改</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+<script>
+    $(function () {
+        const editModal = $("#editUserModal");
+        // 获取防伪token
+        const token = $('input[name="__RequestVerificationToken"]').val();
+
+        // 打开编辑弹窗时回填数据
+        $(".edit-btn").on("click", function () {
+            const btn = $(this);
+            $("#editUserId").val(btn.data("id"));
+            $("#editUsername").val(btn.data("username"));
+            $("#editRealName").val(btn.data("realname"));
+            $("#editBalance").val(parseFloat(btn.data("balance")).toFixed(2));
+            $("#editQQ").val(btn.data("qq"));
+        });
+
+        // 弹窗关闭清空表单，防止缓存旧数据
+        editModal.on("hidden.bs.modal", function () {
+            $("#editUserId").val("");
+            $("#editUsername").val("");
+            $("#editRealName").val("");
+            $("#editBalance").val("");
+            $("#editQQ").val("");
+        });
+
+        // 保存修改，提交后台更新余额
+        $("#saveEditBtn").on("click", function () {
+            const userId = $("#editUserId").val();
+            const realName = $("#editRealName").val().trim();
+            const balanceVal = $("#editBalance").val();
+            const qq = $("#editQQ").val().trim();
+
+            const balance = parseFloat(balanceVal);
+            // 前端校验余额合法性
+            if (isNaN(balance) || balance < 0) {
+                alert("余额不能为负数，请输入合法金额（最多两位小数）");
+                return;
+            }
+
+            const postData = {
+                userId: userId,
+                realName: realName,
+                balance: balance,
+                qq: qq
+            };
+
+            // 关键：headers带上防伪令牌
+            $.ajax({
+                url: "/Admin/UserManage?handler=EditUser",
+                type: "POST",
+                headers: {
+                    "RequestVerificationToken": token
+                },
+                data: postData,
+                dataType: "json",
+                success: function (res) {
+                    alert(res.msg);
+                    if (res.code === 1) {
+                        editModal.modal("hide");
+                        location.reload();
+                    }
+                },
+                error: function (xhr) {
+                    console.error("错误详情：", xhr.responseText);
+                    alert("提交失败，控制台查看详细报错");
+                }
+            });
+        });
+    });
+</script>

@@ -14,7 +14,7 @@ internal class Program
         builder.Services.AddDbContext<AppDBContext>(options =>
         {
             var connStr = builder.Configuration.GetConnectionString("DefaultConnection");
-            options.UseMySql(connStr, ServerVersion.AutoDetect(connStr), mysqlOpt =>
+             options.UseMySql(connStr, ServerVersion.AutoDetect(connStr), mysqlOpt =>
             {
                 // 开启连接自动重连
                 mysqlOpt.EnableRetryOnFailure(

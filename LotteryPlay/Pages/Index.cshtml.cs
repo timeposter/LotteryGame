@@ -263,7 +263,7 @@ namespace LotteryPlay.Pages
         {
             var history = await _dbContext.LotteryDatas
                 .Where(m => m.LotteryId == lotId && m.IsOpen == 1)
-                .OrderByDescending(m => m.CreateTime)
+                .OrderByDescending(m => m.PeriodNo)
                 .Take(10)
                 .Select(m => new
                 {
